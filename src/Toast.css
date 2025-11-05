@@ -1,0 +1,131 @@
+.toast {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: #ffffff;
+  padding: 24px 48px;
+  border-radius: 12px;
+  font-size: 1.2rem;
+  z-index: 10000;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  animation: toastAnimationDesktop 1s ease-in-out;
+}
+
+@keyframes toastAnimationDesktop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8) translateY(20px);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.05) translateY(0);
+  }
+  25% {
+    transform: translate(-50%, -50%) scale(1) translateY(0);
+  }
+  70% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(50vw - 70px), calc(-50vh + 40px)) scale(0.3);
+  }
+}
+
+.toast::before {
+  content: '✓';
+  display: inline-block;
+  margin-right: 12px;
+  font-size: 1.4rem;
+  animation: checkMark 0.5s ease 0.1s both;
+}
+
+@keyframes checkMark {
+  0% {
+    opacity: 0;
+    transform: scale(0) rotate(-45deg);
+  }
+  50% {
+    transform: scale(1.2) rotate(0deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@media (max-width: 768px) {
+  .toast {
+    padding: 18px 36px;
+    font-size: 1.05rem;
+    max-width: 90%;
+    width: auto;
+  }
+  
+  .toast::before {
+    font-size: 1.3rem;
+    margin-right: 10px;
+  }
+
+  @keyframes toastAnimationDesktop {
+    0% {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.8) translateY(20px);
+    }
+    15% {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1.05) translateY(0);
+    }
+    25% {
+      transform: translate(-50%, -50%) scale(1) translateY(0);
+    }
+    70% {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1) translateY(0);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(calc(50vw - 60px), calc(-50vh + 36px)) scale(0.3);
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .toast {
+    padding: 16px 28px;
+    font-size: 0.95rem;
+    max-width: 85%;
+    border-radius: 10px;
+  }
+  
+  .toast::before {
+    font-size: 1.1rem;
+    margin-right: 8px;
+  }
+
+  @keyframes toastAnimationDesktop {
+    0% {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.8) translateY(20px);
+    }
+    15% {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1.05) translateY(0);
+    }
+    25% {
+      transform: translate(-50%, -50%) scale(1) translateY(0);
+    }
+    70% {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1) translateY(0);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(calc(50vw - 52px), calc(-50vh + 32px)) scale(0.3);
+    }
+  }
+}
+
