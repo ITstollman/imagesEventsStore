@@ -144,6 +144,14 @@
   padding-top: 80px;
 }
 
+.store-container .loading,
+.store-container .no-data {
+  text-align: center;
+  padding: 80px 20px;
+  font-size: 1.1rem;
+  color: #666666;
+}
+
 .store-title {
   font-size: 3rem;
   font-weight: 300;

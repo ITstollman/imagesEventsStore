@@ -4,7 +4,8 @@ import Checkout from './Checkout'
 import Cart from './Cart'
 import { useCart } from './CartContext'
 
-const frameProducts = [
+// Default fallback products if none are provided from API
+const defaultProducts = [
   { 
     id: 1, 
     name: 'Classic Black Frame',
@@ -31,10 +32,13 @@ const frameProducts = [
   },
 ]
 
-function ImageDetail({ image, onBack, onAddedToCart }) {
+function ImageDetail({ image, printOptions, onBack, onAddedToCart }) {
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [showCart, setShowCart] = useState(false)
   const { getCartCount } = useCart()
+
+  // Use API print options if available, otherwise use default products
+  const frameProducts = printOptions && printOptions.length > 0 ? printOptions : defaultProducts
 
   useEffect(() => {
     window.scrollTo(0, 0)
