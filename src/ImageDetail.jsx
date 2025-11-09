@@ -38,6 +38,8 @@ function ImageDetail({ image, printOptions, onBack, onAddedToCart }) {
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [showCart, setShowCart] = useState(false)
   const [imageLoaded, setImageLoaded] = useState(false)
+  const [downloading, setDownloading] = useState(false)
+  const [downloaded, setDownloaded] = useState(false)
   const { getCartCount } = useCart()
 
   // Use API print options if available, otherwise use default products
@@ -46,10 +48,14 @@ function ImageDetail({ image, printOptions, onBack, onAddedToCart }) {
   useEffect(() => {
     window.scrollTo(0, 0)
     setImageLoaded(false) // Reset loading state when image changes
+    setDownloading(false) // Reset downloading state when image changes
+    setDownloaded(false) // Reset download state when image changes
   }, [image.id])
 
   const handleDownload = async () => {
     try {
+      setDownloading(true)
+      
       // Try to use a CORS proxy or fetch through backend
       const response = await fetch(`${API_BASE_URL}/download-image`, {
         method: 'POST',
@@ -72,11 +78,16 @@ function ImageDetail({ image, printOptions, onBack, onAddedToCart }) {
         link.click()
         document.body.removeChild(link)
         window.URL.revokeObjectURL(blobUrl)
+        
+        // Mark as downloaded
+        setDownloading(false)
+        setDownloaded(true)
       } else {
         throw new Error('Backend download failed')
       }
     } catch (error) {
       console.error('Error downloading via backend:', error)
+      setDownloading(false)
       
       // Fallback: Try direct download with content-disposition
       let downloadUrl = image.src
@@ -127,28 +138,56 @@ function ImageDetail({ image, printOptions, onBack, onAddedToCart }) {
       </button>
 
       <div className="detail-content">
-        <div className="image-section">
-          <div className={`image-wrapper ${imageLoaded ? 'loaded' : ''}`}>
-            {!imageLoaded && (
-              <div className="image-skeleton">
-                <div className="skeleton-shimmer"></div>
+        <div className={`image-section ${downloaded ? 'collapsed' : ''}`}>
+          {!downloaded ? (
+            <>
+              <div className={`image-wrapper ${imageLoaded ? 'loaded' : ''}`}>
+                {!imageLoaded && (
+                  <div className="image-skeleton">
+                    <div className="skeleton-shimmer"></div>
+                  </div>
+                )}
+                <img 
+                  src={image.src} 
+                  alt={`Photo ${image.id}`}
+                  onLoad={() => setImageLoaded(true)}
+                  style={{ opacity: imageLoaded ? 1 : 0 }}
+                />
               </div>
-            )}
-            <img 
-              src={image.src} 
-              alt={`Photo ${image.id}`}
-              onLoad={() => setImageLoaded(true)}
-              style={{ opacity: imageLoaded ? 1 : 0 }}
-            />
-          </div>
-          <button onClick={handleDownload} className="download-button">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="8 10 12 14 16 10" />
-              <line x1="12" y1="14" x2="12" y2="3" />
-            </svg>
-            Download Original
-          </button>
+              <button onClick={handleDownload} className="download-button" disabled={downloading}>
+                {downloading ? (
+                  <>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="8 10 12 14 16 10" />
+                      <line x1="12" y1="14" x2="12" y2="3" />
+                    </svg>
+                    Downloading<span className="dots"></span>
+                  </>
+                ) : (
+                  <>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="8 10 12 14 16 10" />
+                      <line x1="12" y1="14" x2="12" y2="3" />
+                    </svg>
+                    Download Original
+                  </>
+                )}
+              </button>
+            </>
+          ) : (
+            <div className="download-success">
+              <div className="success-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+              </div>
+              <h3 className="success-title">Downloaded</h3>
+              <p className="success-subtitle">Your image has been saved</p>
+            </div>
+          )}
         </div>
 
         <div className="products-section">

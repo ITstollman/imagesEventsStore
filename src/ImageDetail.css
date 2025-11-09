@@ -58,13 +58,18 @@
   padding: 40px;
   margin-bottom: 40px;
   text-align: center;
+  transition: all 0.4s ease;
+}
+
+.image-section.collapsed {
+  padding: 30px 40px;
 }
 
 .image-wrapper {
   max-width: 800px;
   margin: 0 auto 30px;
   position: relative;
-  min-height: 400px;
+  min-height: 300px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -86,7 +91,7 @@
   transform: translateX(-50%);
   width: 100%;
   max-width: 800px;
-  height: 500px;
+  height: 300px;
   background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
   background-size: 200% 100%;
   animation: skeletonPulseDetail 1.5s ease-in-out infinite;
@@ -144,6 +149,93 @@
 
 .download-button:hover {
   background: #333333;
+}
+
+.download-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.download-button:disabled:hover {
+  background: #000000;
+}
+
+/* Animated dots for downloading state */
+.dots::after {
+  content: '';
+  animation: dots 1.5s steps(4, end) infinite;
+}
+
+@keyframes dots {
+  0%, 20% {
+    content: '';
+  }
+  40% {
+    content: '.';
+  }
+  60% {
+    content: '..';
+  }
+  80%, 100% {
+    content: '...';
+  }
+}
+
+/* Download Success State */
+.download-success {
+  text-align: center;
+  padding: 20px 0;
+  animation: fadeInSuccess 0.5s ease;
+}
+
+@keyframes fadeInSuccess {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.success-icon {
+  margin: 0 auto 16px;
+  width: 64px;
+  height: 64px;
+  background: #4caf50;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: scaleIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes scaleIn {
+  0% {
+    transform: scale(0);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.success-icon svg {
+  color: #ffffff;
+}
+
+.success-title {
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: #000000;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.01em;
+}
+
+.success-subtitle {
+  font-size: 1rem;
+  color: #666666;
+  margin: 0;
 }
 
 .products-section {
