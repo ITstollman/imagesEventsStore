@@ -46,26 +46,47 @@ function ImageDetail({ image, printOptions, onBack, onAddedToCart }) {
     setImageLoaded(false) // Reset loading state when image changes
   }, [image.id])
 
-  const handleDownload = () => {
-    // For Firebase Storage URLs, add response-content-disposition parameter
-    let downloadUrl = image.src
-    
-    if (downloadUrl.includes('firebasestorage.googleapis.com')) {
-      // Add parameter to force download instead of opening in browser
-      const separator = downloadUrl.includes('?') ? '&' : '?'
-      const filename = `${image.id}.jpg`
-      downloadUrl = `${downloadUrl}${separator}response-content-disposition=attachment;filename="${filename}"`
+  const handleDownload = async () => {
+    try {
+      // Try to use a CORS proxy or fetch through backend
+      const response = await fetch(`${API_BASE_URL}/download-image`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          imageUrl: image.src,
+          filename: `${image.id}.jpg`
+        })
+      })
+      
+      if (response.ok) {
+        const blob = await response.blob()
+        const blobUrl = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = blobUrl
+        link.download = `${image.id}.jpg`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(blobUrl)
+      } else {
+        throw new Error('Backend download failed')
+      }
+    } catch (error) {
+      console.error('Error downloading via backend:', error)
+      
+      // Fallback: Try direct download with content-disposition
+      let downloadUrl = image.src
+      
+      if (downloadUrl.includes('firebasestorage.googleapis.com')) {
+        const separator = downloadUrl.includes('?') ? '&' : '?'
+        downloadUrl = `${downloadUrl}${separator}response-content-disposition=attachment`
+      }
+      
+      // Open in new tab as last resort
+      window.open(downloadUrl, '_blank')
     }
-    
-    // Create a link and trigger download
-    const link = document.createElement('a')
-    link.href = downloadUrl
-    link.download = `${image.id}.jpg`
-    link.target = '_blank'
-    link.rel = 'noopener noreferrer'
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
   }
 
   if (selectedProduct) {
