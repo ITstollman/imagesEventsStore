@@ -35,6 +35,7 @@ const defaultProducts = [
 function ImageDetail({ image, printOptions, onBack, onAddedToCart }) {
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [showCart, setShowCart] = useState(false)
+  const [imageLoaded, setImageLoaded] = useState(false)
   const { getCartCount } = useCart()
 
   // Use API print options if available, otherwise use default products
@@ -42,7 +43,8 @@ function ImageDetail({ image, printOptions, onBack, onAddedToCart }) {
 
   useEffect(() => {
     window.scrollTo(0, 0)
-  }, [])
+    setImageLoaded(false) // Reset loading state when image changes
+  }, [image.id])
 
   const handleDownload = () => {
     // Simulate download
@@ -89,8 +91,18 @@ function ImageDetail({ image, printOptions, onBack, onAddedToCart }) {
 
       <div className="detail-content">
         <div className="image-section">
-          <div className="image-wrapper">
-            <img src={image.src} alt={`Photo ${image.id}`} />
+          <div className={`image-wrapper ${imageLoaded ? 'loaded' : ''}`}>
+            {!imageLoaded && (
+              <div className="image-skeleton">
+                <div className="skeleton-shimmer"></div>
+              </div>
+            )}
+            <img 
+              src={image.src} 
+              alt={`Photo ${image.id}`}
+              onLoad={() => setImageLoaded(true)}
+              style={{ opacity: imageLoaded ? 1 : 0 }}
+            />
           </div>
           <button onClick={handleDownload} className="download-button">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
