@@ -10,12 +10,12 @@
 
 .home-cart-icon-button {
   position: fixed;
-  top: 20px;
-  right: 20px;
+  top: 30px;
+  right: 30px;
   background: transparent;
   border: none;
   cursor: pointer;
-  padding: 10px;
+  padding: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -28,19 +28,24 @@
   transform: scale(1.1);
 }
 
+.home-cart-icon-button svg {
+  width: 28px;
+  height: 28px;
+}
+
 .home-cart-badge {
   position: absolute;
-  top: 5px;
-  right: 5px;
+  top: 8px;
+  right: 8px;
   background: #ff0000;
   color: #ffffff;
   border-radius: 50%;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 600;
 }
 
