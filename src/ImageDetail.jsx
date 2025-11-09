@@ -4,6 +4,8 @@ import Checkout from './Checkout'
 import Cart from './Cart'
 import { useCart } from './CartContext'
 
+const API_BASE_URL = 'https://imageseventsbackend-production.up.railway.app'
+
 // Default fallback products if none are provided from API
 const defaultProducts = [
   { 
