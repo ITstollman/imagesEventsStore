@@ -39,7 +39,26 @@ function Home() {
 
   const fetchFaces = async (eventId) => {
     try {
+      // Check cache first (before setting loading)
+      const cacheKey = `faces_${eventId}`
+      const cached = sessionStorage.getItem(cacheKey)
+      
+      if (cached) {
+        const { faces: cachedFaces, eventName: cachedEventName, timestamp } = JSON.parse(cached)
+        // Use cache if it's less than 10 minutes old
+        const tenMinutes = 10 * 60 * 1000
+        if (Date.now() - timestamp < tenMinutes) {
+          console.log('Using cached faces data')
+          setFaces(cachedFaces)
+          setEventName(cachedEventName)
+          setLoading(false)
+          return
+        }
+      }
+      
       setLoading(true)
+      
+      // Fetch from API if no cache or cache expired
       const response = await fetch(`${API_BASE_URL}/faces?e=${eventId}`)
       if (!response.ok) throw new Error('Failed to fetch faces')
       const data = await response.json()
@@ -50,9 +69,20 @@ function Home() {
         if (data.eventName) {
           setEventName(data.eventName)
         }
+        // Cache the data
+        sessionStorage.setItem(cacheKey, JSON.stringify({
+          faces: data.faces,
+          eventName: data.eventName,
+          timestamp: Date.now()
+        }))
       } else if (Array.isArray(data)) {
         // Fallback if backend returns array directly
         setFaces(data)
+        sessionStorage.setItem(cacheKey, JSON.stringify({
+          faces: data,
+          eventName: eventName,
+          timestamp: Date.now()
+        }))
       } else {
         console.warn('Unexpected backend response format:', data)
         setFaces([])
