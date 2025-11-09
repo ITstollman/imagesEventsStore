@@ -6,6 +6,39 @@
   animation: fadeInPage 0.4s ease;
 }
 
+.store-container .back-button {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #ffffff;
+  color: #000000;
+  border: 1px solid #000000;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.store-container .back-button:hover {
+  background: #000000;
+  color: #ffffff;
+}
+
+.store-container .back-button svg {
+  transition: transform 0.2s ease;
+}
+
+.store-container .back-button:hover svg {
+  transform: translateX(-3px);
+}
+
 @keyframes fadeInPage {
   from {
     opacity: 0;
@@ -189,6 +222,13 @@
     padding: 16px;
   }
 
+  .store-container .back-button {
+    top: 16px;
+    left: 16px;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+  }
+
   .cart-icon-button {
     top: 16px;
     right: 16px;
@@ -234,6 +274,13 @@
 @media (max-width: 480px) {
   .store-container {
     padding: 12px;
+  }
+
+  .store-container .back-button {
+    top: 12px;
+    left: 12px;
+    padding: 8px 14px;
+    font-size: 0.85rem;
   }
 
   .cart-icon-button {

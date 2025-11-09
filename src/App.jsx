@@ -1,149 +1,85 @@
-import { useState, useEffect } from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Routes, Route, useNavigate } from 'react-router-dom'
 import './App.css'
 import Store from './Store'
 import ImageDetail from './ImageDetail'
 import Checkout from './Checkout'
 
+// Mock face data - replace with actual face images
+const faces = [
+  { id: 1, image: '/image1.png', name: 'Person 1' },
+  { id: 2, image: '/image2.png', name: 'Person 2' },
+  { id: 3, image: '/image3.png', name: 'Person 3' },
+  { id: 4, image: '/image4.png', name: 'Person 4' },
+  { id: 5, image: '/image1.png', name: 'Person 5' },
+  { id: 6, image: '/image2.png', name: 'Person 6' },
+  { id: 7, image: '/image3.png', name: 'Person 7' },
+  { id: 8, image: '/image4.png', name: 'Person 8' },
+  { id: 9, image: '/image1.png', name: 'Person 9' },
+  { id: 10, image: '/image2.png', name: 'Person 10' },
+  { id: 11, image: '/image3.png', name: 'Person 11' },
+  { id: 12, image: '/image4.png', name: 'Person 12' },
+  { id: 13, image: '/image1.png', name: 'Person 13' },
+  { id: 14, image: '/image2.png', name: 'Person 14' },
+  { id: 15, image: '/image3.png', name: 'Person 15' },
+  { id: 16, image: '/image4.png', name: 'Person 16' },
+  { id: 17, image: '/image1.png', name: 'Person 17' },
+  { id: 18, image: '/image2.png', name: 'Person 18' },
+  { id: 19, image: '/image3.png', name: 'Person 19' },
+  { id: 20, image: '/image4.png', name: 'Person 20' },
+  { id: 21, image: '/image1.png', name: 'Person 21' },
+  { id: 22, image: '/image2.png', name: 'Person 22' },
+  { id: 23, image: '/image3.png', name: 'Person 23' },
+  { id: 24, image: '/image4.png', name: 'Person 24' },
+  { id: 25, image: '/image1.png', name: 'Person 25' },
+  { id: 26, image: '/image2.png', name: 'Person 26' },
+  { id: 27, image: '/image3.png', name: 'Person 27' },
+  { id: 28, image: '/image4.png', name: 'Person 28' },
+  { id: 29, image: '/image1.png', name: 'Person 29' },
+  { id: 30, image: '/image2.png', name: 'Person 30' },
+  { id: 31, image: '/image3.png', name: 'Person 31' },
+  { id: 32, image: '/image4.png', name: 'Person 32' },
+  { id: 33, image: '/image1.png', name: 'Person 33' },
+  { id: 34, image: '/image2.png', name: 'Person 34' },
+  { id: 35, image: '/image3.png', name: 'Person 35' },
+  { id: 36, image: '/image4.png', name: 'Person 36' },
+  { id: 37, image: '/image1.png', name: 'Person 37' },
+  { id: 38, image: '/image2.png', name: 'Person 38' },
+  { id: 39, image: '/image3.png', name: 'Person 39' },
+  { id: 40, image: '/image4.png', name: 'Person 40' },
+]
+
 function Home() {
-  const [selectedImage, setSelectedImage] = useState(null)
-  const [previewUrl, setPreviewUrl] = useState(null)
-  const [email, setEmail] = useState('')
-  const [isDragging, setIsDragging] = useState(false)
-  const [isSubmitted, setIsSubmitted] = useState(false)
+  const navigate = useNavigate()
 
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [])
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0]
-    if (file && file.type.startsWith('image/')) {
-      setSelectedImage(file)
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setPreviewUrl(reader.result)
-      }
-      reader.readAsDataURL(file)
-    }
-  }
-
-  const handleDragOver = (e) => {
-    e.preventDefault()
-    setIsDragging(true)
-  }
-
-  const handleDragLeave = (e) => {
-    e.preventDefault()
-    setIsDragging(false)
-  }
-
-  const handleDrop = (e) => {
-    e.preventDefault()
-    setIsDragging(false)
-    
-    const file = e.dataTransfer.files[0]
-    if (file && file.type.startsWith('image/')) {
-      setSelectedImage(file)
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setPreviewUrl(reader.result)
-      }
-      reader.readAsDataURL(file)
-    }
-  }
-
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    if (selectedImage && email) {
-      // Here you would typically send the data to your backend
-      console.log('Submitting:', { image: selectedImage.name, email })
-      setIsSubmitted(true)
-    }
-  }
-
-  const handleReset = () => {
-    setSelectedImage(null)
-    setPreviewUrl(null)
-    setEmail('')
-    setIsSubmitted(false)
-  }
-
-  if (isSubmitted) {
-    return (
-      <div className="container">
-        <div className="success-container">
-          <div className="success-icon">✓</div>
-          <h1>All Set!</h1>
-          <p className="success-message">
-            We'll search for your photos and send you an email at <strong>{email}</strong> when they're ready.
-          </p>
-        </div>
-      </div>
-    )
+  const handleFaceClick = (face) => {
+    console.log('Selected face:', face.id)
+    // Navigate to gallery
+    navigate('/gallery')
   }
 
   return (
     <div className="container">
-      <div className="content">
+      <div className="content face-selection-content">
         <h2 className="event-title">John and Sara's Wedding</h2>
         <h1 className="title">Find Your Photos</h1>
-        <p className="subtitle">Upload a reference image and we'll find all your photos from the event</p>
+        <p className="subtitle">Click on yourself to find all your photos from the event</p>
 
-        <div
-          className={`upload-area ${isDragging ? 'dragging' : ''} ${previewUrl ? 'has-image' : ''}`}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-        >
-          {previewUrl ? (
-            <div className="preview-container">
-              <img src={previewUrl} alt="Preview" className="preview-image" />
-              <button onClick={handleReset} className="remove-button">
-                Remove
-              </button>
+        <div className="faces-grid">
+          {faces.map((face) => (
+            <div
+              key={face.id}
+              className="face-circle"
+              onClick={() => handleFaceClick(face)}
+            >
+              <img src={face.image} alt={face.name} />
             </div>
-          ) : (
-            <label htmlFor="file-input" className="upload-label">
-              <div className="upload-icon">
-                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="17 8 12 3 7 8" />
-                  <line x1="12" y1="3" x2="12" y2="15" />
-                </svg>
-              </div>
-              <p className="upload-text">Drop your image here or click to browse</p>
-              <p className="upload-hint">Supports: JPG, PNG, HEIC</p>
-            </label>
-          )}
-          <input
-            id="file-input"
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-            className="file-input"
-          />
+          ))}
         </div>
-
-        {selectedImage && (
-          <form onSubmit={handleSubmit} className="form">
-            <div className="input-group">
-              <label htmlFor="email" className="label">Email Address</label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="your@email.com"
-                className="email-input"
-                required
-              />
-            </div>
-            <button type="submit" className="submit-button">
-              Send me email when it's ready
-            </button>
-          </form>
-        )}
       </div>
     </div>
   )

@@ -54,6 +54,13 @@ function Store() {
       {showCart && <Cart onClose={() => setShowCart(false)} />}
       {showToast && <Toast message="Added to cart" onClose={() => setShowToast(false)} />}
       
+      <button onClick={() => navigate('/')} className="back-button">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Back
+      </button>
+      
       {cartCount > 0 && (
         <button className={`cart-icon-button ${cartVibrate ? 'vibrate' : ''}`} onClick={() => setShowCart(true)}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
