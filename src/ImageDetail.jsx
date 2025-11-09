@@ -46,30 +46,26 @@ function ImageDetail({ image, printOptions, onBack, onAddedToCart }) {
     setImageLoaded(false) // Reset loading state when image changes
   }, [image.id])
 
-  const handleDownload = async () => {
-    try {
-      // Fetch the image as a blob to force download
-      const response = await fetch(image.src)
-      const blob = await response.blob()
-      
-      // Create a temporary URL for the blob
-      const blobUrl = window.URL.createObjectURL(blob)
-      
-      // Create a link and trigger download
-      const link = document.createElement('a')
-      link.href = blobUrl
-      link.download = `${image.id}.jpg`
-      document.body.appendChild(link)
-      link.click()
-      
-      // Clean up
-      document.body.removeChild(link)
-      window.URL.revokeObjectURL(blobUrl)
-    } catch (error) {
-      console.error('Error downloading image:', error)
-      // Fallback: try opening in new tab
-      window.open(image.src, '_blank')
+  const handleDownload = () => {
+    // For Firebase Storage URLs, add response-content-disposition parameter
+    let downloadUrl = image.src
+    
+    if (downloadUrl.includes('firebasestorage.googleapis.com')) {
+      // Add parameter to force download instead of opening in browser
+      const separator = downloadUrl.includes('?') ? '&' : '?'
+      const filename = `${image.id}.jpg`
+      downloadUrl = `${downloadUrl}${separator}response-content-disposition=attachment;filename="${filename}"`
     }
+    
+    // Create a link and trigger download
+    const link = document.createElement('a')
+    link.href = downloadUrl
+    link.download = `${image.id}.jpg`
+    link.target = '_blank'
+    link.rel = 'noopener noreferrer'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
   }
 
   if (selectedProduct) {
