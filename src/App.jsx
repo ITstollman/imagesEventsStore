@@ -16,6 +16,7 @@ function Home() {
   const [faces, setFaces] = useState([])
   const [loading, setLoading] = useState(true)
   const [eventId, setEventId] = useState(null)
+  const [eventName, setEventName] = useState('Event')
   const { getCartCount } = useCart()
 
   useEffect(() => {
@@ -38,25 +39,21 @@ function Home() {
       if (!response.ok) throw new Error('Failed to fetch faces')
       const data = await response.json()
       
-      // Debug: Log what we received from backend
-      console.log('Backend response:', data)
-      console.log('Type of data:', typeof data)
-      console.log('Is array?', Array.isArray(data))
-      
-      // Ensure data is an array
-      if (Array.isArray(data)) {
-        setFaces(data)
-      } else if (data && Array.isArray(data.faces)) {
-        // In case backend returns { faces: [...] }
-        console.log('Using data.faces instead')
+      // Backend returns { eventId, eventName, count, faces: [...] }
+      if (data && Array.isArray(data.faces)) {
         setFaces(data.faces)
+        if (data.eventName) {
+          setEventName(data.eventName)
+        }
+      } else if (Array.isArray(data)) {
+        // Fallback if backend returns array directly
+        setFaces(data)
       } else {
-        console.warn('Backend data is not an array:', data)
+        console.warn('Unexpected backend response format:', data)
         setFaces([])
       }
     } catch (error) {
       console.error('Error fetching faces:', error)
-      // Fallback to empty array if fetch fails
       setFaces([])
     } finally {
       setLoading(false)
@@ -87,7 +84,7 @@ function Home() {
       )}
 
       <div className="content face-selection-content">
-        <h2 className="event-title">John and Sara's Wedding</h2>
+        <h2 className="event-title">{eventName}</h2>
         <h1 className="title">Find Your Photos</h1>
         <p className="subtitle">Click on yourself to find all your photos from the event</p>
 
@@ -109,7 +106,7 @@ function Home() {
                 className="face-circle"
                 onClick={() => handleFaceClick(face)}
               >
-                <img src={face.image} alt={face.name || `Person ${face.id}`} />
+                <img src={face.imageUrl} alt={face.label || `Person ${face.id}`} />
               </div>
             ))}
           </div>
