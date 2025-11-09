@@ -17,7 +17,12 @@ function Home() {
   const [loading, setLoading] = useState(true)
   const [eventId, setEventId] = useState(null)
   const [eventName, setEventName] = useState('Event')
+  const [loadedImages, setLoadedImages] = useState(new Set())
   const { getCartCount } = useCart()
+
+  const handleImageLoad = (faceId) => {
+    setLoadedImages(prev => new Set(prev).add(faceId))
+  }
 
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -100,13 +105,18 @@ function Home() {
           <div className="no-data">No faces available. Please check the event ID.</div>
         ) : (
           <div className="faces-grid">
-            {faces.map((face) => (
+            {faces.map((face, index) => (
               <div
                 key={face.id}
-                className="face-circle"
+                className={`face-circle ${loadedImages.has(face.id) ? 'loaded' : ''}`}
                 onClick={() => handleFaceClick(face)}
+                style={{ animationDelay: `${index * 0.05}s` }}
               >
-                <img src={face.imageUrl} alt={face.label || `Person ${face.id}`} />
+                <img 
+                  src={face.imageUrl} 
+                  alt={face.label || `Person ${face.id}`}
+                  onLoad={() => handleImageLoad(face.id)}
+                />
               </div>
             ))}
           </div>
