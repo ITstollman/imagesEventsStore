@@ -18,7 +18,12 @@ function Store() {
   const [galleryImages, setGalleryImages] = useState([])
   const [loading, setLoading] = useState(true)
   const [printOptions, setPrintOptions] = useState([])
+  const [loadedImages, setLoadedImages] = useState(new Set())
   const { getCartCount } = useCart()
+
+  const handleImageLoad = (imageId) => {
+    setLoadedImages(prev => new Set(prev).add(imageId))
+  }
 
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -40,6 +45,18 @@ function Store() {
       const response = await fetch(`${API_BASE_URL}/images?p=${personId}&e=${eventId}`)
       if (!response.ok) throw new Error('Failed to fetch images')
       const data = await response.json()
+      
+      // Debug: Log what we received from backend
+      console.log('Images API response:', data)
+      console.log('Type of data:', typeof data)
+      console.log('Is array?', Array.isArray(data))
+      if (data.images) {
+        console.log('Images array:', data.images)
+        console.log('Number of images:', data.images.length)
+      }
+      if (data.options) {
+        console.log('Print options:', data.options)
+      }
       
       // Store images and print options
       setGalleryImages(data.images || data)
@@ -111,18 +128,29 @@ function Store() {
         <p className="store-subtitle">Click on any photo to view and purchase prints</p>
 
         {loading ? (
-          <div className="loading">Loading your photos...</div>
+          <div className="gallery">
+            {[...Array(8)].map((_, index) => (
+              <div key={`skeleton-${index}`} className="gallery-item skeleton">
+                <div className="skeleton-shimmer"></div>
+              </div>
+            ))}
+          </div>
         ) : galleryImages.length === 0 ? (
           <div className="no-data">No photos found for this person.</div>
         ) : (
           <div className="gallery">
-            {galleryImages.map((image) => (
+            {galleryImages.map((image, index) => (
               <div 
                 key={image.id} 
-                className="gallery-item"
+                className={`gallery-item ${loadedImages.has(image.id) ? 'loaded' : ''}`}
                 onClick={() => setSelectedImage(image)}
+                style={{ animationDelay: `${index * 0.05}s` }}
               >
-                <img src={image.url} alt={image.alt || `Photo ${image.id}`} />
+                <img 
+                  src={image.url} 
+                  alt={image.alt || `Photo ${image.id}`}
+                  onLoad={() => handleImageLoad(image.id)}
+                />
                 <div className="gallery-overlay">
                   <span>View</span>
                 </div>
