@@ -147,8 +147,8 @@ function Store() {
                 style={{ animationDelay: `${index * 0.05}s` }}
               >
                 <img 
-                  src={image.url} 
-                  alt={image.alt || `Photo ${image.id}`}
+                  src={image.thumbnail || image.src} 
+                  alt={`Photo ${image.id}`}
                   onLoad={() => handleImageLoad(image.id)}
                 />
                 <div className="gallery-overlay">

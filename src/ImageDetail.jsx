@@ -47,8 +47,8 @@ function ImageDetail({ image, printOptions, onBack, onAddedToCart }) {
   const handleDownload = () => {
     // Simulate download
     const link = document.createElement('a')
-    link.href = image.url
-    link.download = `${image.alt}.jpg`
+    link.href = image.src
+    link.download = `${image.id}.jpg`
     link.click()
   }
 
@@ -90,7 +90,7 @@ function ImageDetail({ image, printOptions, onBack, onAddedToCart }) {
       <div className="detail-content">
         <div className="image-section">
           <div className="image-wrapper">
-            <img src={image.url} alt={image.alt} />
+            <img src={image.src} alt={`Photo ${image.id}`} />
           </div>
           <button onClick={handleDownload} className="download-button">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
