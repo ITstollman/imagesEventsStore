@@ -76,7 +76,13 @@ function Home() {
         <p className="subtitle">Click on yourself to find all your photos from the event</p>
 
         {loading ? (
-          <div className="loading">Loading faces...</div>
+          <div className="faces-grid">
+            {[...Array(12)].map((_, index) => (
+              <div key={`skeleton-${index}`} className="face-circle skeleton">
+                <div className="skeleton-shimmer"></div>
+              </div>
+            ))}
+          </div>
         ) : faces.length === 0 ? (
           <div className="no-data">No faces available. Please check the event ID.</div>
         ) : (
