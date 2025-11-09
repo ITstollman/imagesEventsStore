@@ -1,9 +1,11 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Routes, Route, useNavigate } from 'react-router-dom'
 import './App.css'
 import Store from './Store'
 import ImageDetail from './ImageDetail'
 import Checkout from './Checkout'
+import Cart from './Cart'
+import { useCart } from './CartContext'
 
 // Mock face data - replace with actual face images
 const faces = [
@@ -51,6 +53,8 @@ const faces = [
 
 function Home() {
   const navigate = useNavigate()
+  const [showCart, setShowCart] = useState(false)
+  const { getCartCount } = useCart()
 
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -62,8 +66,23 @@ function Home() {
     navigate('/gallery')
   }
 
+  const cartCount = getCartCount()
+
   return (
     <div className="container">
+      {showCart && <Cart onClose={() => setShowCart(false)} />}
+      
+      {cartCount > 0 && (
+        <button className="home-cart-icon-button" onClick={() => setShowCart(true)}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="9" cy="21" r="1"/>
+            <circle cx="20" cy="21" r="1"/>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+          </svg>
+          <span className="home-cart-badge">{cartCount}</span>
+        </button>
+      )}
+
       <div className="content face-selection-content">
         <h2 className="event-title">John and Sara's Wedding</h2>
         <h1 className="title">Find Your Photos</h1>
