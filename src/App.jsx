@@ -37,7 +37,23 @@ function Home() {
       const response = await fetch(`${API_BASE_URL}/faces?e=${eventId}`)
       if (!response.ok) throw new Error('Failed to fetch faces')
       const data = await response.json()
-      setFaces(data)
+      
+      // Debug: Log what we received from backend
+      console.log('Backend response:', data)
+      console.log('Type of data:', typeof data)
+      console.log('Is array?', Array.isArray(data))
+      
+      // Ensure data is an array
+      if (Array.isArray(data)) {
+        setFaces(data)
+      } else if (data && Array.isArray(data.faces)) {
+        // In case backend returns { faces: [...] }
+        console.log('Using data.faces instead')
+        setFaces(data.faces)
+      } else {
+        console.warn('Backend data is not an array:', data)
+        setFaces([])
+      }
     } catch (error) {
       console.error('Error fetching faces:', error)
       // Fallback to empty array if fetch fails
