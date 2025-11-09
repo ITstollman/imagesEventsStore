@@ -46,12 +46,30 @@ function ImageDetail({ image, printOptions, onBack, onAddedToCart }) {
     setImageLoaded(false) // Reset loading state when image changes
   }, [image.id])
 
-  const handleDownload = () => {
-    // Simulate download
-    const link = document.createElement('a')
-    link.href = image.src
-    link.download = `${image.id}.jpg`
-    link.click()
+  const handleDownload = async () => {
+    try {
+      // Fetch the image as a blob to force download
+      const response = await fetch(image.src)
+      const blob = await response.blob()
+      
+      // Create a temporary URL for the blob
+      const blobUrl = window.URL.createObjectURL(blob)
+      
+      // Create a link and trigger download
+      const link = document.createElement('a')
+      link.href = blobUrl
+      link.download = `${image.id}.jpg`
+      document.body.appendChild(link)
+      link.click()
+      
+      // Clean up
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(blobUrl)
+    } catch (error) {
+      console.error('Error downloading image:', error)
+      // Fallback: try opening in new tab
+      window.open(image.src, '_blank')
+    }
   }
 
   if (selectedProduct) {
