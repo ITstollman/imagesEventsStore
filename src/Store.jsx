@@ -143,8 +143,11 @@ function Store() {
               <div 
                 key={image.id} 
                 className={`gallery-item ${loadedImages.has(image.id) ? 'loaded' : ''}`}
-                onClick={() => setSelectedImage(image)}
-                style={{ animationDelay: `${index * 0.05}s` }}
+                onClick={() => loadedImages.has(image.id) && setSelectedImage(image)}
+                style={{ 
+                  animationDelay: `${index * 0.05}s`,
+                  cursor: loadedImages.has(image.id) ? 'pointer' : 'default'
+                }}
               >
                 <img 
                   src={image.thumbnail || image.src} 
