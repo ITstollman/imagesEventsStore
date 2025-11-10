@@ -139,8 +139,11 @@ function Home() {
               <div
                 key={face.id}
                 className={`face-circle ${loadedImages.has(face.id) ? 'loaded' : ''}`}
-                onClick={() => handleFaceClick(face)}
-                style={{ animationDelay: `${index * 0.05}s` }}
+                onClick={() => loadedImages.has(face.id) && handleFaceClick(face)}
+                style={{ 
+                  animationDelay: `${index * 0.05}s`,
+                  cursor: loadedImages.has(face.id) ? 'pointer' : 'default'
+                }}
               >
                 <img 
                   src={face.imageUrl} 
