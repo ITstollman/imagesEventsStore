@@ -35,8 +35,8 @@
 
 .home-cart-badge {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: -4px;
+  right: -4px;
   background: #ff0000;
   color: #ffffff;
   border-radius: 12px;
@@ -48,6 +48,7 @@
   justify-content: center;
   font-size: 0.75rem;
   font-weight: 600;
+  border: 2px solid #ffffff;
 }
 
 .content {
