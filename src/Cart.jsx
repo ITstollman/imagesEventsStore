@@ -29,6 +29,9 @@ function Cart({ onClose }) {
       // Get event ID from URL params
       const eventId = searchParams.get('e')
       
+      console.log('Cart - Event ID from URL:', eventId)
+      console.log('Cart - Full search params:', searchParams.toString())
+      
       // Format cart items for backend
       const items = cartItems.map(item => ({
         productId: item.product.id,
@@ -40,6 +43,8 @@ function Cart({ onClose }) {
         imageUrl: item.image?.src || item.product.preview,
         eventId: eventId // Add event ID to metadata
       }))
+
+      console.log('Cart - Sending to backend:', { items, eventId })
 
       // Call backend to create Stripe checkout session
       const response = await fetch(`${API_BASE_URL}/api/create-checkout-session`, {

@@ -36,6 +36,9 @@ function Checkout({ product, image, onBack, onBackToGallery, initialSize, initia
       // Get event ID from URL params
       const eventId = searchParams.get('e')
       
+      console.log('Checkout - Event ID from URL:', eventId)
+      console.log('Checkout - Full search params:', searchParams.toString())
+      
       // Format single item for backend
       const items = [{
         productId: product.id,
@@ -47,6 +50,8 @@ function Checkout({ product, image, onBack, onBackToGallery, initialSize, initia
         imageUrl: image?.src || product.preview,
         eventId: eventId // Add event ID to metadata
       }]
+
+      console.log('Checkout - Sending to backend:', { items, eventId })
 
       // Call backend to create Stripe checkout session
       const response = await fetch(`${API_BASE_URL}/api/create-checkout-session`, {
