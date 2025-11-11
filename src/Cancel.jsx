@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import Footer from './Footer'
 import './Cancel.css'
 
 function Cancel() {
@@ -59,6 +60,7 @@ function Cancel() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   )
 }

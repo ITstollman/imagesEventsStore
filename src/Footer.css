@@ -1,0 +1,27 @@
+.page-footer {
+  padding: 20px;
+  text-align: center;
+  margin-top: auto;
+}
+
+.footer-email {
+  font-size: 0.75rem;
+  color: #999999;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.footer-email:hover {
+  color: #666666;
+}
+
+@media (max-width: 768px) {
+  .page-footer {
+    padding: 16px;
+  }
+  
+  .footer-email {
+    font-size: 0.7rem;
+  }
+}
+

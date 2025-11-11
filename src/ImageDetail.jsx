@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import './ImageDetail.css'
 import Checkout from './Checkout'
 import Cart from './Cart'
+import Footer from './Footer'
 import { useCart } from './CartContext'
 
 const API_BASE_URL = 'https://imageseventsbackend-production.up.railway.app'
@@ -214,6 +215,7 @@ function ImageDetail({ image, printOptions, onBack, onAddedToCart }) {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   )
 }

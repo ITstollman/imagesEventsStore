@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import './Checkout.css'
 import { useCart } from './CartContext'
 import Cart from './Cart'
+import Footer from './Footer'
 
 const API_BASE_URL = 'https://imageseventsbackend-production.up.railway.app'
 
@@ -219,6 +220,7 @@ function Checkout({ product, image, onBack, onBackToGallery, initialSize, initia
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   )
 }

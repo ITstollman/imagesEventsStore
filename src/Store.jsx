@@ -4,6 +4,7 @@ import './Store.css'
 import ImageDetail from './ImageDetail'
 import Cart from './Cart'
 import Toast from './Toast'
+import Footer from './Footer'
 import { useCart } from './CartContext'
 
 const API_BASE_URL = 'https://imageseventsbackend-production.up.railway.app'
@@ -162,6 +163,7 @@ function Store() {
           </div>
         )}
       </div>
+      <Footer />
     </div>
   )
 }

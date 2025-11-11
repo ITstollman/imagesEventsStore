@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useCart } from './CartContext'
+import Footer from './Footer'
 import './Success.css'
 
 function Success() {
@@ -67,6 +68,7 @@ function Success() {
           )}
         </div>
       </div>
+      <Footer />
     </div>
   )
 }

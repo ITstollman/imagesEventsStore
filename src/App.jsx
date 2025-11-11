@@ -7,6 +7,7 @@ import Checkout from './Checkout'
 import Cart from './Cart'
 import Success from './Success'
 import Cancel from './Cancel'
+import Footer from './Footer'
 import { useCart } from './CartContext'
 
 const API_BASE_URL = 'https://imageseventsbackend-production.up.railway.app'
@@ -157,6 +158,7 @@ function Home() {
           </div>
         )}
       </div>
+      <Footer />
     </div>
   )
 }
