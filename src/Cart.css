@@ -190,14 +190,51 @@
   letter-spacing: 0.02em;
 }
 
-.cart-checkout-button:hover:not(:disabled) {
-  background: #333333;
+.cart-checkout-button.stripe-button {
+  background: #635BFF;
+  box-shadow: 0 2px 8px rgba(99, 91, 255, 0.3);
+}
+
+.cart-checkout-button.stripe-button:hover:not(:disabled) {
+  background: #5048E5;
+  box-shadow: 0 4px 12px rgba(99, 91, 255, 0.4);
+  transform: translateY(-1px);
 }
 
 .cart-checkout-button:disabled {
   background: #666666;
   cursor: not-allowed;
   opacity: 0.7;
+}
+
+.stripe-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 12px;
+  font-size: 0.85rem;
+  color: #666666;
+}
+
+.stripe-badge svg {
+  color: #635BFF;
+}
+
+.stripe-badge span {
+  color: #666666;
+}
+
+.stripe-link {
+  color: #635BFF;
+  text-decoration: none;
+  font-weight: 500;
+  border-bottom: 1px solid transparent;
+  transition: border-bottom-color 0.2s ease;
+}
+
+.stripe-link:hover {
+  border-bottom-color: #635BFF;
 }
 
 /* Responsive */
