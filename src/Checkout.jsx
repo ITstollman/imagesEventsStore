@@ -15,7 +15,7 @@ const colors = [
   { name: 'Dark Wood', value: '#5C4033' },
 ]
 
-function Checkout({ product, image, onBack, onBackToGallery, initialSize, initialColor, initialQuantity, isFromCart }) {
+function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSize, initialColor, initialQuantity, isFromCart }) {
   const [searchParams] = useSearchParams()
   const [selectedSize, setSelectedSize] = useState(initialSize || sizes[0])
   const [selectedColor, setSelectedColor] = useState(initialColor || colors[0])
@@ -33,11 +33,12 @@ function Checkout({ product, image, onBack, onBackToGallery, initialSize, initia
     setIsProcessing(true)
     
     try {
-      // Get project ID from URL params
-      const projectId = searchParams.get('e') || ''
+      // Get event ID from props or URL params
+      const projectId = eventId || searchParams.get('e') || ''
       
-      console.log('Checkout - Project ID from URL:', projectId)
-      console.log('Checkout - Full search params:', searchParams.toString())
+      console.log('Checkout - Project ID from prop:', eventId)
+      console.log('Checkout - Project ID from URL:', searchParams.get('e'))
+      console.log('Checkout - Final Project ID:', projectId)
       
       // Format single item for backend
       const items = [{
@@ -50,15 +51,14 @@ function Checkout({ product, image, onBack, onBackToGallery, initialSize, initia
         imageUrl: image?.src || product.preview
       }]
 
-      // Prepare checkout data with projectId at top level
-      const checkoutData = {
-        items: items,
+      // Create metadata object as expected by backend
+      const metadata = {
         userId: 'guest',
         projectId: projectId,
-        customerEmail: null
+        itemCount: items.length.toString()
       }
 
-      console.log('Checkout - Sending to backend:', checkoutData)
+      console.log('Checkout - Sending to backend:', { items, metadata })
 
       // Call backend to create Stripe checkout session
       const response = await fetch(`${API_BASE_URL}/api/create-checkout-session`, {
@@ -66,7 +66,7 @@ function Checkout({ product, image, onBack, onBackToGallery, initialSize, initia
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(checkoutData)
+        body: JSON.stringify({ items, metadata })
       })
 
       if (!response.ok) {

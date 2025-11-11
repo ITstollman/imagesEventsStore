@@ -29,8 +29,9 @@ function Cart({ onClose }) {
       // Get project ID from URL params
       const projectId = searchParams.get('e') || ''
       
-      console.log('Cart - Project ID from URL:', projectId)
+      console.log('Cart - Project ID from URL:', searchParams.get('e'))
       console.log('Cart - Full search params:', searchParams.toString())
+      console.log('Cart - Final Project ID:', projectId)
       
       // Format cart items for backend
       const items = cartItems.map(item => ({
@@ -43,15 +44,14 @@ function Cart({ onClose }) {
         imageUrl: item.image?.src || item.product.preview
       }))
 
-      // Prepare checkout data with projectId at top level
-      const checkoutData = {
-        items: items,
+      // Create metadata object as expected by backend
+      const metadata = {
         userId: 'guest',
         projectId: projectId,
-        customerEmail: null
+        itemCount: items.length.toString()
       }
 
-      console.log('Cart - Sending to backend:', checkoutData)
+      console.log('Cart - Sending to backend:', { items, metadata })
 
       // Call backend to create Stripe checkout session
       const response = await fetch(`${API_BASE_URL}/api/create-checkout-session`, {
@@ -59,7 +59,7 @@ function Cart({ onClose }) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(checkoutData)
+        body: JSON.stringify({ items, metadata })
       })
 
       if (!response.ok) {

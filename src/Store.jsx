@@ -20,6 +20,7 @@ function Store() {
   const [loading, setLoading] = useState(true)
   const [printOptions, setPrintOptions] = useState([])
   const [loadedImages, setLoadedImages] = useState(new Set())
+  const [eventId, setEventId] = useState('')
   const { getCartCount } = useCart()
 
   const handleImageLoad = (imageId) => {
@@ -31,10 +32,14 @@ function Store() {
     
     // Get person ID and event ID from URL query params
     const personId = searchParams.get('p')
-    const eventId = searchParams.get('e')
+    const eventIdParam = searchParams.get('e')
     
-    if (personId && eventId) {
-      fetchPersonImages(personId, eventId)
+    if (eventIdParam) {
+      setEventId(eventIdParam)
+    }
+    
+    if (personId && eventIdParam) {
+      fetchPersonImages(personId, eventIdParam)
     } else {
       setLoading(false)
     }
@@ -77,6 +82,7 @@ function Store() {
       <ImageDetail 
         image={selectedImage}
         printOptions={printOptions}
+        eventId={eventId}
         onBack={() => {
           setSelectedImage(null)
           window.scrollTo(0, 0)

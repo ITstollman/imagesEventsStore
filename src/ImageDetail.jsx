@@ -35,7 +35,7 @@ const defaultProducts = [
   },
 ]
 
-function ImageDetail({ image, printOptions, onBack, onAddedToCart }) {
+function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [showCart, setShowCart] = useState(false)
   const [imageLoaded, setImageLoaded] = useState(false)
@@ -108,6 +108,7 @@ function ImageDetail({ image, printOptions, onBack, onAddedToCart }) {
       <Checkout 
         product={selectedProduct}
         image={image}
+        eventId={eventId}
         onBack={() => setSelectedProduct(null)}
         onBackToGallery={onAddedToCart}
       />
