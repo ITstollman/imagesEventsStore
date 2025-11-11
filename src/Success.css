@@ -57,6 +57,7 @@
 .success-circle {
   stroke: #4CAF50;
   stroke-width: 2;
+  fill: #4CAF50;
   stroke-dasharray: 166;
   stroke-dashoffset: 166;
   animation: drawCircle 0.6s ease forwards;
@@ -69,7 +70,7 @@
 }
 
 .success-check {
-  stroke: #4CAF50;
+  stroke: #ffffff;
   stroke-width: 3;
   stroke-linecap: round;
   stroke-dasharray: 48;
@@ -160,16 +161,20 @@
 }
 
 .success-button {
-  padding: 16px 48px;
+  width: 100%;
+  padding: 18px 48px;
   background: #000000;
   color: #ffffff;
   border: none;
-  font-size: 1rem;
+  font-size: 1.1rem;
   cursor: pointer;
   transition: all 0.2s ease;
   font-weight: 400;
   letter-spacing: 0.02em;
+  margin-top: 10px;
   animation: fadeInText 0.8s 0.9s ease both;
+  position: relative;
+  z-index: 10;
 }
 
 .success-button:hover {
