@@ -43,14 +43,15 @@ function Cart({ onClose }) {
         imageUrl: item.image?.src || item.product.preview
       }))
 
-      // Create metadata object as expected by backend
-      const metadata = {
+      // Prepare checkout data with projectId at top level
+      const checkoutData = {
+        items: items,
         userId: 'guest',
         projectId: projectId,
-        itemCount: items.length.toString()
+        customerEmail: null
       }
 
-      console.log('Cart - Sending to backend:', { items, metadata })
+      console.log('Cart - Sending to backend:', checkoutData)
 
       // Call backend to create Stripe checkout session
       const response = await fetch(`${API_BASE_URL}/api/create-checkout-session`, {
@@ -58,7 +59,7 @@ function Cart({ onClose }) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ items, metadata })
+        body: JSON.stringify(checkoutData)
       })
 
       if (!response.ok) {

@@ -33,7 +33,7 @@ function Checkout({ product, image, onBack, onBackToGallery, initialSize, initia
     setIsProcessing(true)
     
     try {
-      // Get event ID from URL params
+      // Get project ID from URL params
       const projectId = searchParams.get('e') || ''
       
       console.log('Checkout - Project ID from URL:', projectId)
@@ -50,14 +50,15 @@ function Checkout({ product, image, onBack, onBackToGallery, initialSize, initia
         imageUrl: image?.src || product.preview
       }]
 
-      // Create metadata object as expected by backend
-      const metadata = {
+      // Prepare checkout data with projectId at top level
+      const checkoutData = {
+        items: items,
         userId: 'guest',
         projectId: projectId,
-        itemCount: items.length.toString()
+        customerEmail: null
       }
 
-      console.log('Checkout - Sending to backend:', { items, metadata })
+      console.log('Checkout - Sending to backend:', checkoutData)
 
       // Call backend to create Stripe checkout session
       const response = await fetch(`${API_BASE_URL}/api/create-checkout-session`, {
@@ -65,7 +66,7 @@ function Checkout({ product, image, onBack, onBackToGallery, initialSize, initia
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ items, metadata })
+        body: JSON.stringify(checkoutData)
       })
 
       if (!response.ok) {
