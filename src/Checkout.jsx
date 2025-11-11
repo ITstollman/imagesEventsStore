@@ -34,7 +34,7 @@ function Checkout({ product, image, onBack, onBackToGallery, initialSize, initia
     
     try {
       // Get event ID from URL params
-      const eventId = searchParams.get('e')
+      const eventId = searchParams.get('e') || '12345' // TESTING: hardcode for debugging
       
       console.log('Checkout - Event ID from URL:', eventId)
       console.log('Checkout - Full search params:', searchParams.toString())

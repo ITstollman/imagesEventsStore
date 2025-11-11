@@ -27,7 +27,7 @@ function Cart({ onClose }) {
     
     try {
       // Get event ID from URL params
-      const eventId = searchParams.get('e')
+      const eventId = searchParams.get('e') || '12345' // TESTING: hardcode for debugging
       
       console.log('Cart - Event ID from URL:', eventId)
       console.log('Cart - Full search params:', searchParams.toString())
