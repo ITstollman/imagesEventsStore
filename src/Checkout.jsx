@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import './Checkout.css'
 import { useCart } from './CartContext'
 import Cart from './Cart'
@@ -15,6 +16,7 @@ const colors = [
 ]
 
 function Checkout({ product, image, onBack, onBackToGallery, initialSize, initialColor, initialQuantity, isFromCart }) {
+  const [searchParams] = useSearchParams()
   const [selectedSize, setSelectedSize] = useState(initialSize || sizes[0])
   const [selectedColor, setSelectedColor] = useState(initialColor || colors[0])
   const [quantity, setQuantity] = useState(initialQuantity || 1)
@@ -31,6 +33,9 @@ function Checkout({ product, image, onBack, onBackToGallery, initialSize, initia
     setIsProcessing(true)
     
     try {
+      // Get event ID from URL params
+      const eventId = searchParams.get('e')
+      
       // Format single item for backend
       const items = [{
         productId: product.id,
@@ -39,7 +44,8 @@ function Checkout({ product, image, onBack, onBackToGallery, initialSize, initia
         quantity: quantity,
         size: selectedSize,
         color: selectedColor.name,
-        imageUrl: image?.src || product.preview
+        imageUrl: image?.src || product.preview,
+        eventId: eventId // Add event ID to metadata
       }]
 
       // Call backend to create Stripe checkout session
@@ -48,7 +54,7 @@ function Checkout({ product, image, onBack, onBackToGallery, initialSize, initia
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ items })
+        body: JSON.stringify({ items, eventId }) // Also pass eventId at top level
       })
 
       if (!response.ok) {

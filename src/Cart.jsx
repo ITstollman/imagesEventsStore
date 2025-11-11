@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import './Cart.css'
 import { useCart } from './CartContext'
 import Checkout from './Checkout'
@@ -6,6 +7,7 @@ import Checkout from './Checkout'
 const API_BASE_URL = 'https://imageseventsbackend-production.up.railway.app'
 
 function Cart({ onClose }) {
+  const [searchParams] = useSearchParams()
   const { cartItems, removeFromCart, updateQuantity, getCartTotal, getCartCount } = useCart()
   const [checkoutItem, setCheckoutItem] = useState(null)
   const [isProcessing, setIsProcessing] = useState(false)
@@ -24,6 +26,9 @@ function Cart({ onClose }) {
     setIsProcessing(true)
     
     try {
+      // Get event ID from URL params
+      const eventId = searchParams.get('e')
+      
       // Format cart items for backend
       const items = cartItems.map(item => ({
         productId: item.product.id,
@@ -32,7 +37,8 @@ function Cart({ onClose }) {
         quantity: item.quantity,
         size: item.selectedSize,
         color: item.selectedColor.name,
-        imageUrl: item.image?.src || item.product.preview
+        imageUrl: item.image?.src || item.product.preview,
+        eventId: eventId // Add event ID to metadata
       }))
 
       // Call backend to create Stripe checkout session
@@ -41,7 +47,7 @@ function Cart({ onClose }) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ items })
+        body: JSON.stringify({ items, eventId }) // Also pass eventId at top level
       })
 
       if (!response.ok) {
