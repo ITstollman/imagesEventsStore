@@ -65,13 +65,6 @@ function Success() {
               Order ID: <span>{sessionId.slice(-8)}</span>
             </p>
           )}
-
-          <button 
-            className="success-button"
-            onClick={() => navigate('/')}
-          >
-            Return to Home
-          </button>
         </div>
       </div>
     </div>
