@@ -6,6 +6,7 @@ import ImageDetail from './ImageDetail'
 import Checkout from './Checkout'
 import Cart from './Cart'
 import Success from './Success'
+import Cancel from './Cancel'
 import { useCart } from './CartContext'
 
 const API_BASE_URL = 'https://imageseventsbackend-production.up.railway.app'
@@ -168,6 +169,7 @@ function App() {
       <Route path="/gallery/:imageId" element={<ImageDetail />} />
       <Route path="/checkout/:productId" element={<Checkout />} />
       <Route path="/checkout/success" element={<Success />} />
+      <Route path="/checkout/cancel" element={<Cancel />} />
     </Routes>
   )
 }
