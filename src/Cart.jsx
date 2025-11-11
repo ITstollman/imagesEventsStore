@@ -3,9 +3,12 @@ import './Cart.css'
 import { useCart } from './CartContext'
 import Checkout from './Checkout'
 
+const API_BASE_URL = 'https://imageseventsbackend-production.up.railway.app'
+
 function Cart({ onClose }) {
   const { cartItems, removeFromCart, updateQuantity, getCartTotal, getCartCount } = useCart()
   const [checkoutItem, setCheckoutItem] = useState(null)
+  const [isProcessing, setIsProcessing] = useState(false)
 
   useEffect(() => {
     // Prevent scrolling on mount
@@ -16,6 +19,45 @@ function Cart({ onClose }) {
       document.body.style.overflow = 'unset'
     }
   }, [])
+
+  const handleCheckout = async () => {
+    setIsProcessing(true)
+    
+    try {
+      // Format cart items for backend
+      const items = cartItems.map(item => ({
+        productId: item.product.id,
+        productName: item.product.name,
+        price: item.product.price,
+        quantity: item.quantity,
+        size: item.selectedSize,
+        color: item.selectedColor.name,
+        imageUrl: item.image?.src || item.product.preview
+      }))
+
+      // Call backend to create Stripe checkout session
+      const response = await fetch(`${API_BASE_URL}/create-checkout-session`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ items })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to create checkout session')
+      }
+
+      const { url } = await response.json()
+      
+      // Redirect to Stripe Checkout
+      window.location.href = url
+    } catch (error) {
+      console.error('Checkout error:', error)
+      alert('Failed to proceed to checkout. Please try again.')
+      setIsProcessing(false)
+    }
+  }
 
   if (checkoutItem) {
     return (
@@ -98,12 +140,12 @@ function Cart({ onClose }) {
             <span>Total:</span>
             <span className="cart-total-price">${getCartTotal().toFixed(2)}</span>
           </div>
-          <button className="cart-checkout-button" onClick={() => {
-            // For now, just show alert. In real app, would navigate to full checkout
-            alert('Proceeding to checkout with all items!')
-            onClose()
-          }}>
-            Proceed to Checkout
+          <button 
+            className="cart-checkout-button" 
+            onClick={handleCheckout}
+            disabled={isProcessing}
+          >
+            {isProcessing ? 'Processing...' : 'Proceed to Checkout'}
           </button>
         </div>
       </div>

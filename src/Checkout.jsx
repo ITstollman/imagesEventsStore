@@ -3,6 +3,8 @@ import './Checkout.css'
 import { useCart } from './CartContext'
 import Cart from './Cart'
 
+const API_BASE_URL = 'https://imageseventsbackend-production.up.railway.app'
+
 const sizes = ['8x10', '11x14', '16x20', '20x30', '24x36']
 const colors = [
   { name: 'Black', value: '#000000' },
@@ -16,17 +18,51 @@ function Checkout({ product, image, onBack, onBackToGallery, initialSize, initia
   const [selectedColor, setSelectedColor] = useState(initialColor || colors[0])
   const [quantity, setQuantity] = useState(initialQuantity || 1)
   const [showCart, setShowCart] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false)
   const { addToCart, getCartCount } = useCart()
 
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [])
 
-  const handleCheckout = (e) => {
+  const handleCheckout = async (e) => {
     e.preventDefault()
-    // Handle checkout logic here
-    console.log('Checkout:', { product, selectedSize, selectedColor, quantity })
-    alert('Checkout functionality would be implemented here!')
+    setIsProcessing(true)
+    
+    try {
+      // Format single item for backend
+      const items = [{
+        productId: product.id,
+        productName: product.name,
+        price: product.price,
+        quantity: quantity,
+        size: selectedSize,
+        color: selectedColor.name,
+        imageUrl: image?.src || product.preview
+      }]
+
+      // Call backend to create Stripe checkout session
+      const response = await fetch(`${API_BASE_URL}/create-checkout-session`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ items })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to create checkout session')
+      }
+
+      const { url } = await response.json()
+      
+      // Redirect to Stripe Checkout
+      window.location.href = url
+    } catch (error) {
+      console.error('Checkout error:', error)
+      alert('Failed to proceed to checkout. Please try again.')
+      setIsProcessing(false)
+    }
   }
 
   const cartCount = getCartCount()
@@ -141,8 +177,8 @@ function Checkout({ product, image, onBack, onBackToGallery, initialSize, initia
                 </div>
               </div>
 
-              <button type="submit" className="checkout-button">
-                Proceed to Checkout
+              <button type="submit" className="checkout-button" disabled={isProcessing}>
+                {isProcessing ? 'Processing...' : 'Proceed to Checkout'}
               </button>
 
               <button 
