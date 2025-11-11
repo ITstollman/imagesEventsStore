@@ -51,11 +51,21 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
         imageUrl: image?.src || product.preview
       }]
 
-      // Create metadata object as expected by backend
+      // Create metadata object with product details
       const metadata = {
         userId: 'guest',
         projectId: projectId,
-        itemCount: items.length.toString()
+        itemCount: items.length.toString(),
+        // Add detailed product information
+        products: JSON.stringify(items.map(item => ({
+          productId: item.productId,
+          productName: item.productName,
+          price: item.price,
+          quantity: item.quantity,
+          size: item.size,
+          color: item.color,
+          imageUrl: item.imageUrl
+        })))
       }
 
       console.log('Checkout - Sending to backend:', { items, metadata })
