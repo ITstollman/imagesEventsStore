@@ -26,10 +26,10 @@ function Cart({ onClose }) {
     setIsProcessing(true)
     
     try {
-      // Get event ID from URL params
-      const eventId = searchParams.get('e') || '12345' // TESTING: hardcode for debugging
+      // Get project ID from URL params
+      const projectId = searchParams.get('e') || ''
       
-      console.log('Cart - Event ID from URL:', eventId)
+      console.log('Cart - Project ID from URL:', projectId)
       console.log('Cart - Full search params:', searchParams.toString())
       
       // Format cart items for backend
@@ -40,11 +40,17 @@ function Cart({ onClose }) {
         quantity: item.quantity,
         size: item.selectedSize,
         color: item.selectedColor.name,
-        imageUrl: item.image?.src || item.product.preview,
-        eventId: eventId // Add event ID to metadata
+        imageUrl: item.image?.src || item.product.preview
       }))
 
-      console.log('Cart - Sending to backend:', { items, eventId })
+      // Create metadata object as expected by backend
+      const metadata = {
+        userId: 'guest',
+        projectId: projectId,
+        itemCount: items.length.toString()
+      }
+
+      console.log('Cart - Sending to backend:', { items, metadata })
 
       // Call backend to create Stripe checkout session
       const response = await fetch(`${API_BASE_URL}/api/create-checkout-session`, {
@@ -52,7 +58,7 @@ function Cart({ onClose }) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ items, eventId }) // Also pass eventId at top level
+        body: JSON.stringify({ items, metadata })
       })
 
       if (!response.ok) {
