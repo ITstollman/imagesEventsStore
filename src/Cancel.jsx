@@ -56,12 +56,6 @@ function Cancel() {
             >
               Return to Checkout
             </button>
-            <button 
-              className="cancel-home-button"
-              onClick={() => navigate('/')}
-            >
-              Go to Home
-            </button>
           </div>
         </div>
       </div>
