@@ -281,8 +281,8 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  margin-top: -20px;
-  margin-bottom: 20px;
+  margin-top: -22px;
+  margin-bottom: -14px;
   font-size: 0.85rem;
   color: #666666;
 }
