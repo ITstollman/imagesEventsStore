@@ -36,7 +36,7 @@ function Cart({ onClose }) {
       }))
 
       // Call backend to create Stripe checkout session
-      const response = await fetch(`${API_BASE_URL}/create-checkout-session`, {
+      const response = await fetch(`${API_BASE_URL}/api/create-checkout-session`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
