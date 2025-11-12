@@ -42,7 +42,8 @@ function Cart({ onClose }) {
       const formatSize = (size) => `x${size.replace('"', '')}`
       
       const getFrameColor = (frameType, material, colorName) => {
-        const color = (colorName || 'Black').replace(/\s+/g, '')
+        // Remove material type from color name (e.g., "Black Metal" → "Black")
+        const color = (colorName || 'Black').replace(/\s+(Metal|Oak)$/i, '').replace(/\s+/g, '')
         const type = frameType || 'Standard'
         const mat = material || 'Metal'
         if (type === 'Premium') {
@@ -69,43 +70,40 @@ function Cart({ onClose }) {
         return width > height ? 'Horizontal' : width < height ? 'Vertical' : null
       }
       
-      // Format cart items with both Stripe and Artelo data
-      const items = cartItems.map((item, index) => {
-        const itemPrice = Number(item.product.price) || 0
-        return {
-          // Stripe fields
-          productId: item.product.id,
-          productName: `${item.product.name} - ${item.selectedSize}" ${item.frameType || 'Standard'} ${item.material || 'Metal'} ${item.selectedColor.name}`,
-          price: itemPrice,
-          quantity: item.quantity,
-          imageUrl: item.image?.src || item.product.preview,
-          // Artelo API fields
-          orderItemId: `item-${item.product.id}-${index}-${Date.now()}`,
-          productInfo: {
-            catalogProductId: "IndividualArtPrint",
-            frameColor: getFrameColor(item.frameType, item.material, item.selectedColor.name),
-            includeFramingService: (item.framingService || 'Ready-to-hang') === 'Ready-to-hang',
-            includeHangingPins: item.includeHangingPins || false,
-            includeMats: item.includeMats || false,
-            orientation: getOrientation(item.selectedSize),
-            paperType: getPaperType(item.printType, item.paperType),
-            size: formatSize(item.selectedSize),
-            unitCost: itemPrice
-          },
-          designs: [{
-            sourceImage: {
-              url: item.image?.src || item.product.preview
-            }
-          }],
-          unitPrice: itemPrice
-        }
-      })
+      // Format cart items with BOTH Stripe and Artelo data
+      const items = cartItems.map((item, index) => ({
+        // Stripe fields (for checkout session)
+        productId: item.product.id,
+        productName: `${item.product.name} - ${item.selectedSize}" ${item.frameType || 'Standard'} ${item.material || 'Metal'} ${item.selectedColor.name}`,
+        price: item.product.price,
+        quantity: item.quantity,
+        imageUrl: item.image?.src || item.product.preview,
+        // Artelo API fields (for order fulfillment)
+        orderItemId: `item-${item.product.id}-${index}-${Date.now()}`,
+        productInfo: {
+          catalogProductId: "IndividualArtPrint",
+          frameColor: getFrameColor(item.frameType, item.material, item.selectedColor.name),
+          includeFramingService: (item.framingService || 'Ready-to-hang') === 'Ready-to-hang',
+          includeHangingPins: item.includeHangingPins || false,
+          includeMats: item.includeMats || false,
+          orientation: getOrientation(item.selectedSize),
+          paperType: getPaperType(item.printType, item.paperType),
+          size: formatSize(item.selectedSize),
+          unitCost: item.product.price
+        },
+        designs: [{
+          sourceImage: {
+            url: item.image?.src || item.product.preview
+          }
+        }],
+        unitPrice: item.product.price
+      }))
 
       // Add shipping as a separate line item
       items.push({
         productId: 'shipping',
         productName: shippingCost === 0 ? '🇺🇸 FREE Shipping (7 days)' : '🇺🇸 Shipping (7 days)',
-        price: Number(shippingCost) || 0,
+        price: shippingCost,
         quantity: 1
       })
 

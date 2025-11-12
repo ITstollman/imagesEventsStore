@@ -144,7 +144,8 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
       
       // Helper function to get Artelo frameColor enum
       const getFrameColor = (frameType, material, colorName) => {
-        const color = colorName.replace(/\s+/g, '')
+        // Remove material type from color name (e.g., "Black Metal" → "Black")
+        const color = colorName.replace(/\s+(Metal|Oak)$/i, '').replace(/\s+/g, '')
         if (frameType === 'Premium') {
           return material === 'Oak' ? `${color}PremiumOak` : `${color}PremiumMetal`
         } else {
@@ -170,18 +171,15 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
         return width > height ? 'Horizontal' : width < height ? 'Vertical' : null
       }
       
-      // Ensure price is a valid number
-      const productPrice = Number(product.price) || 0
-      
-      // Format items with both Stripe and Artelo data
+      // Format items with BOTH Stripe and Artelo data
       const items = [{
-        // Stripe fields
+        // Stripe fields (for checkout session)
         productId: product.id,
         productName: `${product.name} - ${selectedSize}" ${frameType} ${material} ${selectedColor.name}`,
-        price: productPrice,
+        price: product.price,
         quantity: quantity,
         imageUrl: image?.src || product.preview,
-        // Artelo API fields
+        // Artelo API fields (for order fulfillment)
         orderItemId: `item-${product.id}-${Date.now()}`,
         productInfo: {
           catalogProductId: "IndividualArtPrint",
@@ -192,21 +190,21 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
           orientation: getOrientation(selectedSize),
           paperType: getPaperType(printType, paperType),
           size: formatSize(selectedSize),
-          unitCost: productPrice
+          unitCost: product.price
         },
         designs: [{
           sourceImage: {
             url: image?.src || product.preview
           }
         }],
-        unitPrice: productPrice
+        unitPrice: product.price
       }]
 
       // Add shipping as a separate line item
       items.push({
         productId: 'shipping',
         productName: shipping === 0 ? '🇺🇸 FREE Shipping (7 days)' : '🇺🇸 Shipping (7 days)',
-        price: Number(shipping) || 0,
+        price: shipping,
         quantity: 1
       })
 
