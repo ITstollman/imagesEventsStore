@@ -38,20 +38,41 @@ function Cart({ onClose }) {
       const shippingCost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : getShippingCost()
       const total = subtotal + shippingCost
       
-      // Format cart items with full configuration details
+      // Helper functions
+      const formatSize = (size) => `x${size.replace('"', '')}`
+      const formatPaperType = (type) => {
+        const paperTypeMap = {
+          'Matte': 'Matte',
+          'Glossy': 'Glossy',
+          'Semi Gloss': 'SemiGloss',
+          'Semi Matte Linen': 'SemiMatteLinen'
+        }
+        return paperTypeMap[type] || type.replace(/\s+/g, '')
+      }
+      const getOrientation = (size) => {
+        const [width, height] = size.replace('"', '').split('x').map(Number)
+        return width > height ? 'Horizontal' : width < height ? 'Vertical' : 'Square'
+      }
+      
+      // Format cart items with backend-expected structure
       const items = cartItems.map(item => ({
         productId: item.product.id,
         productName: `${item.product.name} - ${item.selectedSize}" ${item.frameType || 'Standard'} ${item.material || 'Metal'} ${item.selectedColor.name}`,
         price: item.product.price,
         quantity: item.quantity,
-        size: item.selectedSize,
-        frameType: item.frameType || 'Standard',
-        material: item.material || 'Metal',
-        color: item.selectedColor.name,
-        printType: item.printType || 'Poster',
-        paperType: item.paperType || 'Matte',
-        framingService: item.framingService || 'Ready-to-hang',
-        imageUrl: item.image?.src || item.product.preview
+        imageUrl: item.image?.src || item.product.preview,
+        product: {
+          catalogProductId: "IndividualArtPrint",
+          frameColor: (item.selectedColor.name || 'Black').replace(/\s+/g, ''),
+          frameStyle: item.material || 'Metal',
+          includeFramingService: (item.framingService || 'Ready-to-hang') === 'Ready-to-hang',
+          includeHangingPins: item.includeHangingPins || false,
+          includeMats: item.includeMats || false,
+          orientation: getOrientation(item.selectedSize),
+          paperStyle: (item.printType || 'Poster').replace(/\s+/g, ''),
+          paperType: formatPaperType(item.paperType || 'Matte'),
+          size: formatSize(item.selectedSize)
+        }
       }))
 
       // Add shipping as a separate line item
@@ -73,20 +94,7 @@ function Cart({ onClose }) {
         total: total.toFixed(2),
         freeShipping: shippingCost === 0 ? 'true' : 'false',
         // Add detailed product information (exclude shipping)
-        products: JSON.stringify(items.filter(item => item.productId !== 'shipping').map(item => ({
-          productId: item.productId,
-          productName: item.productName,
-          price: item.price,
-          quantity: item.quantity,
-          size: item.size,
-          frameType: item.frameType,
-          material: item.material,
-          color: item.color,
-          printType: item.printType,
-          paperType: item.paperType,
-          framingService: item.framingService,
-          imageUrl: item.imageUrl
-        })))
+        products: JSON.stringify(items.filter(item => item.productId !== 'shipping'))
       }
 
       console.log('Cart - Sending to backend:', { items, metadata })

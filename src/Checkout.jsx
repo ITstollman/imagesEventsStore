@@ -139,20 +139,45 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
       console.log('Checkout - Project ID from URL:', searchParams.get('e'))
       console.log('Checkout - Final Project ID:', projectId)
       
-      // Format items with full configuration details
+      // Helper function to format size (e.g., "8x10" → "x8x10")
+      const formatSize = (size) => `x${size.replace('"', '')}`
+      
+      // Helper function to format paper type
+      const formatPaperType = (type) => {
+        const paperTypeMap = {
+          'Matte': 'Matte',
+          'Glossy': 'Glossy',
+          'Semi Gloss': 'SemiGloss',
+          'Semi Matte Linen': 'SemiMatteLinen'
+        }
+        return paperTypeMap[type] || type.replace(/\s+/g, '')
+      }
+      
+      // Determine orientation from size
+      const getOrientation = (size) => {
+        const [width, height] = size.replace('"', '').split('x').map(Number)
+        return width > height ? 'Horizontal' : width < height ? 'Vertical' : 'Square'
+      }
+      
+      // Format items with backend-expected structure
       const items = [{
         productId: product.id,
         productName: `${product.name} - ${selectedSize}" ${frameType} ${material} ${selectedColor.name}`,
         price: product.price,
         quantity: quantity,
-        size: selectedSize,
-        frameType: frameType,
-        material: material,
-        color: selectedColor.name,
-        printType: printType,
-        paperType: paperType,
-        framingService: readyToHang ? 'Ready-to-hang' : 'Insert Print Yourself',
-        imageUrl: image?.src || product.preview
+        imageUrl: image?.src || product.preview,
+        product: {
+          catalogProductId: "IndividualArtPrint",
+          frameColor: selectedColor.name.replace(/\s+/g, ''),
+          frameStyle: material,
+          includeFramingService: readyToHang,
+          includeHangingPins: includeHangingPins,
+          includeMats: includeMats,
+          orientation: getOrientation(selectedSize),
+          paperStyle: printType.replace(/\s+/g, ''),
+          paperType: formatPaperType(paperType),
+          size: formatSize(selectedSize)
+        }
       }]
 
       // Add shipping as a separate line item
@@ -174,20 +199,7 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
         total: grandTotal.toFixed(2),
         freeShipping: shipping === 0 ? 'true' : 'false',
         // Add detailed product information (exclude shipping)
-        products: JSON.stringify(items.filter(item => item.productId !== 'shipping').map(item => ({
-          productId: item.productId,
-          productName: item.productName,
-          price: item.price,
-          quantity: item.quantity,
-          size: item.size,
-          frameType: item.frameType,
-          material: item.material,
-          color: item.color,
-          printType: item.printType,
-          paperType: item.paperType,
-          framingService: item.framingService,
-          imageUrl: item.imageUrl
-        })))
+        products: JSON.stringify(items.filter(item => item.productId !== 'shipping'))
       }
 
       console.log('Checkout - Sending to backend:', { items, metadata })
@@ -574,7 +586,9 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
                     material,
                     printType,
                     paperType,
-                    framingService: readyToHang ? 'Ready-to-hang' : 'Insert Print Yourself'
+                    framingService: readyToHang ? 'Ready-to-hang' : 'Insert Print Yourself',
+                    includeHangingPins,
+                    includeMats
                   })
                   // Navigate back immediately
                   if (onBackToGallery) {
