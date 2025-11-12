@@ -155,18 +155,34 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
         imageUrl: image?.src || product.preview
       }]
 
+      // Add shipping as a separate line item
+      items.push({
+        productId: 'shipping',
+        productName: shipping === 0 ? '🇺🇸 FREE Shipping (7 days)' : '🇺🇸 Shipping (7 days)',
+        price: shipping,
+        quantity: 1,
+        size: '',
+        frameType: '',
+        material: '',
+        color: '',
+        printType: '',
+        paperType: '',
+        framingService: '',
+        imageUrl: ''
+      })
+
       // Create metadata object with full order details including shipping
       const metadata = {
         userId: 'guest',
         projectId: projectId,
-        itemCount: items.length.toString(),
+        itemCount: '1', // Only count actual products, not shipping
         shippingCost: shipping.toFixed(2),
         shippingDescription: shipping === 0 ? '🇺🇸 FREE Shipping (7 days)' : '🇺🇸 Shipping (7 days)',
         subtotal: subtotalBeforeShipping.toFixed(2),
         total: grandTotal.toFixed(2),
         freeShipping: shipping === 0 ? 'true' : 'false',
-        // Add detailed product information
-        products: JSON.stringify(items.map(item => ({
+        // Add detailed product information (exclude shipping)
+        products: JSON.stringify(items.filter(item => item.productId !== 'shipping').map(item => ({
           productId: item.productId,
           productName: item.productName,
           price: item.price,
