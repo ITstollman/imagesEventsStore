@@ -202,6 +202,13 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
               </div>
 
               <div className="price-summary">
+                <div className="summary-item">
+                  <img src={product.preview} alt={product.name} className="summary-item-image" />
+                  <div className="summary-item-details">
+                    <h4>{product.name}</h4>
+                    <p>Size: {selectedSize}" | Color: {selectedColor.name}</p>
+                  </div>
+                </div>
                 <div className="price-row">
                   <span>Price:</span>
                   <span>${product.price.toFixed(2)}</span>

@@ -128,11 +128,8 @@ function Cart({ onClose }) {
         <div className="cart-items">
           {cartItems.map((item) => (
             <div key={item.id} className="cart-item">
-              <div className="cart-item-images">
+              <div className="cart-item-image-container">
                 <img src={item.product.preview} alt={item.product.name} className="cart-item-frame-image" />
-                {item.image?.src && (
-                  <img src={item.image.src} alt="Your photo" className="cart-item-photo-preview" />
-                )}
               </div>
               <div className="cart-item-details">
                 <h3 className="cart-item-title">{item.product.name}</h3>
