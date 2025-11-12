@@ -33,30 +33,67 @@ function Cart({ onClose }) {
       console.log('Cart - Full search params:', searchParams.toString())
       console.log('Cart - Final Project ID:', projectId)
       
-      // Format cart items for backend
+      // Calculate totals
+      const subtotal = getCartTotal()
+      const shippingCost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : getShippingCost()
+      const total = subtotal + shippingCost
+      
+      // Format cart items with full configuration details
       const items = cartItems.map(item => ({
         productId: item.product.id,
-        productName: item.product.name,
+        productName: `${item.product.name} - ${item.selectedSize}" ${item.frameType || 'Standard'} ${item.material || 'Metal'} ${item.selectedColor.name}`,
         price: item.product.price,
         quantity: item.quantity,
         size: item.selectedSize,
+        frameType: item.frameType || 'Standard',
+        material: item.material || 'Metal',
         color: item.selectedColor.name,
+        printType: item.printType || 'Poster',
+        paperType: item.paperType || 'Matte',
+        framingService: item.framingService || 'Ready-to-hang',
         imageUrl: item.image?.src || item.product.preview
       }))
 
-      // Create metadata object with product details
+      // Add shipping as a separate line item if not free
+      if (shippingCost > 0) {
+        items.push({
+          productId: 'shipping',
+          productName: '🇺🇸 Shipping (7 days)',
+          price: shippingCost,
+          quantity: 1,
+          size: '',
+          frameType: '',
+          material: '',
+          color: '',
+          printType: '',
+          paperType: '',
+          framingService: '',
+          imageUrl: ''
+        })
+      }
+
+      // Create metadata object with full order details
       const metadata = {
         userId: 'guest',
         projectId: projectId,
-        itemCount: items.length.toString(),
+        itemCount: cartItems.length.toString(), // Don't count shipping as item
+        shippingCost: shippingCost.toFixed(2),
+        subtotal: subtotal.toFixed(2),
+        total: total.toFixed(2),
+        freeShipping: shippingCost === 0 ? 'true' : 'false',
         // Add detailed product information
-        products: JSON.stringify(items.map(item => ({
+        products: JSON.stringify(items.filter(item => item.productId !== 'shipping').map(item => ({
           productId: item.productId,
           productName: item.productName,
           price: item.price,
           quantity: item.quantity,
           size: item.size,
+          frameType: item.frameType,
+          material: item.material,
           color: item.color,
+          printType: item.printType,
+          paperType: item.paperType,
+          framingService: item.framingService,
           imageUrl: item.imageUrl
         })))
       }
@@ -144,15 +181,25 @@ function Cart({ onClose }) {
                   <div className="cart-spec-row">
                     <span className="spec-label">Frame:</span>
                     <span className="spec-value">
+                      {item.frameType || 'Standard'} {item.material || 'Metal'} - 
                       <span 
                         className="color-dot"
                         style={{ 
                           backgroundColor: item.selectedColor.value,
-                          border: item.selectedColor.value === '#FFFFFF' ? '1px solid #e0e0e0' : 'none'
+                          border: item.selectedColor.value === '#FFFFFF' ? '1px solid #e0e0e0' : 'none',
+                          marginLeft: '4px'
                         }}
                       ></span>
                       {item.selectedColor.name}
                     </span>
+                  </div>
+                  <div className="cart-spec-row">
+                    <span className="spec-label">Print:</span>
+                    <span className="spec-value">{item.printType || 'Poster'} - {item.paperType || 'Matte'}</span>
+                  </div>
+                  <div className="cart-spec-row">
+                    <span className="spec-label">Service:</span>
+                    <span className="spec-value">{item.framingService || 'Ready-to-hang'}</span>
                   </div>
                   <div className="cart-spec-row">
                     <span className="spec-label">Unit Price:</span>

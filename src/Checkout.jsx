@@ -139,30 +139,62 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
       console.log('Checkout - Project ID from URL:', searchParams.get('e'))
       console.log('Checkout - Final Project ID:', projectId)
       
-      // Format single item for backend
+      // Format items with full configuration details
       const items = [{
         productId: product.id,
-        productName: product.name,
+        productName: `${product.name} - ${selectedSize}" ${frameType} ${material} ${selectedColor.name}`,
         price: product.price,
         quantity: quantity,
         size: selectedSize,
+        frameType: frameType,
+        material: material,
         color: selectedColor.name,
+        printType: printType,
+        paperType: paperType,
+        framingService: readyToHang ? 'Ready-to-hang' : 'Insert Print Yourself',
         imageUrl: image?.src || product.preview
       }]
 
-      // Create metadata object with product details
+      // Add shipping as a separate line item if not free
+      if (shipping > 0) {
+        items.push({
+          productId: 'shipping',
+          productName: '🇺🇸 Shipping (7 days)',
+          price: shipping,
+          quantity: 1,
+          size: '',
+          frameType: '',
+          material: '',
+          color: '',
+          printType: '',
+          paperType: '',
+          framingService: '',
+          imageUrl: ''
+        })
+      }
+
+      // Create metadata object with full order details
       const metadata = {
         userId: 'guest',
         projectId: projectId,
-        itemCount: items.length.toString(),
+        itemCount: (items.length - (shipping > 0 ? 1 : 0)).toString(), // Don't count shipping as item
+        shippingCost: shipping.toFixed(2),
+        subtotal: subtotalBeforeShipping.toFixed(2),
+        total: grandTotal.toFixed(2),
+        freeShipping: shipping === 0 ? 'true' : 'false',
         // Add detailed product information
-        products: JSON.stringify(items.map(item => ({
+        products: JSON.stringify(items.filter(item => item.productId !== 'shipping').map(item => ({
           productId: item.productId,
           productName: item.productName,
           price: item.price,
           quantity: item.quantity,
           size: item.size,
+          frameType: item.frameType,
+          material: item.material,
           color: item.color,
+          printType: item.printType,
+          paperType: item.paperType,
+          framingService: item.framingService,
           imageUrl: item.imageUrl
         })))
       }
@@ -466,7 +498,10 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
                         <img src={item.product.preview} alt={item.product.name} className="summary-item-image" />
                         <div className="summary-item-details">
                           <h4>{item.product.name}</h4>
-                          <p>Size: {item.selectedSize}" | Color: {item.selectedColor.name}</p>
+                          <p>Size: {item.selectedSize}"</p>
+                          <p>Frame: {item.frameType || 'Standard'} {item.material || 'Metal'} - {item.selectedColor.name}</p>
+                          <p>Print: {item.printType || 'Poster'} on {item.paperType || 'Matte'}</p>
+                          <p>{item.framingService || 'Ready to Hang'}</p>
                           <p className="summary-item-price">
                             ${item.product.price.toFixed(2)} × {item.quantity} = ${(item.product.price * item.quantity).toFixed(2)}
                           </p>
@@ -545,7 +580,10 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
                     selectedColor,
                     quantity,
                     frameType,
-                    material
+                    material,
+                    printType,
+                    paperType,
+                    framingService: readyToHang ? 'Ready-to-hang' : 'Insert Print Yourself'
                   })
                   // Navigate back immediately
                   if (onBackToGallery) {
