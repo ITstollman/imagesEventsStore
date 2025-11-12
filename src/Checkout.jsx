@@ -209,33 +209,6 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
               </div>
 
               <div className="form-section">
-                <h3 className="section-title">Frame Material</h3>
-                <div className="size-options">
-                  <button
-                    type="button"
-                    className={`option-button ${material === 'Metal' ? 'selected' : ''}`}
-                    onClick={() => {
-                      setMaterial('Metal')
-                      setSelectedColor(metalColors[0])
-                    }}
-                  >
-                    Metal
-                  </button>
-                  <button
-                    type="button"
-                    className={`option-button ${material === 'Oak' ? 'selected' : ''}`}
-                    onClick={() => {
-                      setMaterial('Oak')
-                      setSelectedColor(oakColors[0])
-                    }}
-                  >
-                    Oak
-                  </button>
-                </div>
-              </div>
-
-              <div className="form-section">
-                <h3 className="section-title">Frame Color</h3>
                 <div className="frame-color-sections">
                   <div className="frame-material-section">
                     <h4 className="material-label">Metal</h4>
