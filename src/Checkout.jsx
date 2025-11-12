@@ -12,17 +12,17 @@ const sizes = ['8x10', '11x14', '16x20', '20x30', '24x36']
 const frameTypes = ['Standard', 'Premium']
 
 const metalColors = [
-  { name: 'Black Metal', value: '#1a1a1a', image: '/print-preview.png' },
-  { name: 'Silver Metal', value: '#c0c0c0', image: '/print-preview.png' },
-  { name: 'Gold Metal', value: '#d4af37', image: '/print-preview.png' },
-  { name: 'Rose Gold Metal', value: '#b76e79', image: '/print-preview.png' },
+  { name: 'Black Metal', value: '#1a1a1a', image: '/frameColor/premium-black-metal.png' },
+  { name: 'Silver Metal', value: '#c0c0c0', image: '/frameColor/premium-silver-metal.png' },
+  { name: 'Gold Metal', value: '#d4af37', image: '/frameColor/premium-gold-metal.png' },
+  { name: 'White Metal', value: '#f5f5f5', image: '/frameColor/premium-white-metal.png' },
 ]
 
 const oakColors = [
-  { name: 'Natural Oak', value: '#D4A574', image: '/print-preview.png' },
-  { name: 'Dark Oak', value: '#5C4033', image: '/print-preview.png' },
-  { name: 'White Oak', value: '#e8dcc4', image: '/print-preview.png' },
-  { name: 'Walnut Oak', value: '#4a3426', image: '/print-preview.png' },
+  { name: 'Beige Oak', value: '#D4A574', image: '/frameColor/premium-beige-oak.png' },
+  { name: 'Black Oak', value: '#5C4033', image: '/frameColor/premium-black-oak.png' },
+  { name: 'White Oak', value: '#e8dcc4', image: '/frameColor/premium-white-oak.png' },
+  { name: 'Walnut Oak', value: '#4a3426', image: '/frameColor/premium-walnut-oak.png' },
 ]
 
 const printTypes = ['Poster', 'Photo', 'Fine Art']
