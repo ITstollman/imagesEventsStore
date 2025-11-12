@@ -128,20 +128,46 @@ function Cart({ onClose }) {
         <div className="cart-items">
           {cartItems.map((item) => (
             <div key={item.id} className="cart-item">
-              <img src={item.product.preview} alt={item.product.name} className="cart-item-image" />
+              <div className="cart-item-images">
+                <img src={item.product.preview} alt={item.product.name} className="cart-item-frame-image" />
+                {item.image?.src && (
+                  <img src={item.image.src} alt="Your photo" className="cart-item-photo-preview" />
+                )}
+              </div>
               <div className="cart-item-details">
-                <h3>{item.product.name}</h3>
-                <p className="cart-item-options">
-                  Size: {item.selectedSize}" | Color: {item.selectedColor.name}
-                </p>
+                <h3 className="cart-item-title">{item.product.name}</h3>
+                <div className="cart-item-specs">
+                  <div className="cart-spec-item">
+                    <span className="spec-label">Size:</span>
+                    <span className="spec-value">{item.selectedSize}"</span>
+                  </div>
+                  <div className="cart-spec-item">
+                    <span className="spec-label">Frame:</span>
+                    <span className="spec-value">
+                      <span 
+                        className="color-dot"
+                        style={{ 
+                          backgroundColor: item.selectedColor.value,
+                          border: item.selectedColor.value === '#FFFFFF' ? '1px solid #e0e0e0' : 'none'
+                        }}
+                      ></span>
+                      {item.selectedColor.name}
+                    </span>
+                  </div>
+                  <div className="cart-spec-item">
+                    <span className="spec-label">Unit Price:</span>
+                    <span className="spec-value">${item.product.price.toFixed(2)}</span>
+                  </div>
+                </div>
                 <div className="cart-item-quantity">
+                  <span className="quantity-label">Quantity:</span>
                   <button 
                     onClick={() => updateQuantity(item.id, item.quantity - 1)}
                     className="quantity-btn"
                   >
                     -
                   </button>
-                  <span>{item.quantity}</span>
+                  <span className="quantity-value">{item.quantity}</span>
                   <button 
                     onClick={() => updateQuantity(item.id, item.quantity + 1)}
                     className="quantity-btn"
@@ -150,12 +176,18 @@ function Cart({ onClose }) {
                   </button>
                 </div>
               </div>
-              <div className="cart-item-price">
-                <p>${(item.product.price * item.quantity).toFixed(2)}</p>
+              <div className="cart-item-price-section">
+                <div className="cart-item-total-price">
+                  ${(item.product.price * item.quantity).toFixed(2)}
+                </div>
                 <button 
                   onClick={() => removeFromCart(item.id)}
                   className="cart-item-remove"
                 >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
                   Remove
                 </button>
               </div>
