@@ -79,8 +79,10 @@
 
 .checkout-grid {
   display: grid;
-  grid-template-columns: 1fr 1.5fr;
+  grid-template-columns: 400px 1fr;
   gap: 50px;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 .preview-section {
@@ -128,9 +130,9 @@
 
 .size-options {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  grid-template-columns: repeat(6, 1fr);
   gap: 10px;
-  max-height: 400px;
+  max-height: 350px;
   overflow-y: auto;
   padding: 4px;
   scrollbar-width: thin;
@@ -535,6 +537,11 @@
   .checkout-grid {
     grid-template-columns: 1fr;
     gap: 40px;
+    max-width: 100%;
+  }
+
+  .size-options {
+    grid-template-columns: repeat(5, 1fr);
   }
 
   .preview-image-wrapper img {
@@ -558,6 +565,10 @@
 
   .checkout-grid {
     gap: 30px;
+  }
+
+  .size-options {
+    grid-template-columns: repeat(4, 1fr);
   }
 
   .preview-image-wrapper img {
