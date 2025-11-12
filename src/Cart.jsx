@@ -59,15 +59,7 @@ function Cart({ onClose }) {
         productId: 'shipping',
         productName: shippingCost === 0 ? '🇺🇸 FREE Shipping (7 days)' : '🇺🇸 Shipping (7 days)',
         price: shippingCost,
-        quantity: 1,
-        size: '',
-        frameType: '',
-        material: '',
-        color: '',
-        printType: '',
-        paperType: '',
-        framingService: '',
-        imageUrl: ''
+        quantity: 1
       })
 
       // Create metadata object with full order details including shipping

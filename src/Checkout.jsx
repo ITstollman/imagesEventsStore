@@ -160,15 +160,7 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
         productId: 'shipping',
         productName: shipping === 0 ? '🇺🇸 FREE Shipping (7 days)' : '🇺🇸 Shipping (7 days)',
         price: shipping,
-        quantity: 1,
-        size: '',
-        frameType: '',
-        material: '',
-        color: '',
-        printType: '',
-        paperType: '',
-        framingService: '',
-        imageUrl: ''
+        quantity: 1
       })
 
       // Create metadata object with full order details including shipping
