@@ -623,6 +623,10 @@
     gap: 6px;
   }
 
+  .size-ratios-container {
+    max-height: 250px;
+  }
+
   .preview-section {
     padding: 0 20px 24px;
   }
