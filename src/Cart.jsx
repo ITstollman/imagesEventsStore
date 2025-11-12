@@ -203,7 +203,7 @@ function Cart({ onClose }) {
             <div className="cart-shipping-container">
               <div className="cart-shipping-row">
                 <span>
-                  🇺🇸 Shipping:
+                  🇺🇸 Shipping (7 days):
                   {getCartTotal() >= FREE_SHIPPING_THRESHOLD && <span className="free-shipping-badge">FREE</span>}
                 </span>
                 <span>

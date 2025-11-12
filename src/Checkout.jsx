@@ -494,7 +494,7 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
                 <div className="shipping-container">
                   <div className="price-row shipping-row">
                     <span>
-                      🇺🇸 Shipping:
+                      🇺🇸 Shipping (7 days):
                       {shipping === 0 && <span className="free-shipping-badge">FREE</span>}
                     </span>
                     <span>
