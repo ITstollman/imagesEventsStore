@@ -30,7 +30,13 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
 
   const currentItemTotal = product.price * quantity
   const cartTotal = getCartTotal()
-  const grandTotal = currentItemTotal + cartTotal
+  const subtotalBeforeShipping = currentItemTotal + cartTotal
+  
+  // Shipping calculation
+  const SHIPPING_COST = 7.00
+  const FREE_SHIPPING_THRESHOLD = 100.00
+  const shipping = subtotalBeforeShipping >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST
+  const grandTotal = subtotalBeforeShipping + shipping
 
   const handleCheckout = async (e) => {
     e.preventDefault()
@@ -214,8 +220,22 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
                     <span>${cartTotal.toFixed(2)}</span>
                   </div>
                 )}
+                <div className="price-row shipping-row">
+                  <span>
+                    🇺🇸 Shipping:
+                    {shipping === 0 && <span className="free-shipping-badge">FREE</span>}
+                  </span>
+                  <span className={shipping === 0 ? 'free-shipping' : ''}>
+                    ${shipping.toFixed(2)}
+                  </span>
+                </div>
+                {subtotalBeforeShipping < FREE_SHIPPING_THRESHOLD && subtotalBeforeShipping >= (FREE_SHIPPING_THRESHOLD - 20) && (
+                  <div className="shipping-notice">
+                    Add ${(FREE_SHIPPING_THRESHOLD - subtotalBeforeShipping).toFixed(2)} more for free shipping!
+                  </div>
+                )}
                 <div className="price-row total">
-                  <span>{cartTotal > 0 ? 'Grand Total:' : 'Total:'}</span>
+                  <span>Total:</span>
                   <span>${grandTotal.toFixed(2)}</span>
                 </div>
               </div>

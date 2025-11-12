@@ -164,9 +164,31 @@ function Cart({ onClose }) {
         </div>
 
         <div className="cart-footer">
-          <div className="cart-total">
-            <span>Total:</span>
-            <span className="cart-total-price">${getCartTotal().toFixed(2)}</span>
+          <div className="cart-pricing">
+            <div className="cart-subtotal-row">
+              <span>Subtotal:</span>
+              <span>${getCartTotal().toFixed(2)}</span>
+            </div>
+            <div className="cart-shipping-row">
+              <span>
+                🇺🇸 Shipping:
+                {getCartTotal() >= 100 && <span className="free-shipping-badge">FREE</span>}
+              </span>
+              <span className={getCartTotal() >= 100 ? 'free-shipping' : ''}>
+                ${getCartTotal() >= 100 ? '0.00' : '7.00'}
+              </span>
+            </div>
+            {getCartTotal() < 100 && getCartTotal() >= 80 && (
+              <div className="cart-shipping-notice">
+                Add ${(100 - getCartTotal()).toFixed(2)} more for free shipping!
+              </div>
+            )}
+            <div className="cart-total">
+              <span>Total:</span>
+              <span className="cart-total-price">
+                ${(getCartTotal() + (getCartTotal() >= 100 ? 0 : 7)).toFixed(2)}
+              </span>
+            </div>
           </div>
           <button 
             className="cart-checkout-button stripe-button" 
