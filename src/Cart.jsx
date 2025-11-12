@@ -131,14 +131,17 @@ function Cart({ onClose }) {
               <div className="cart-item-image-container">
                 <img src={item.product.preview} alt={item.product.name} className="cart-item-frame-image" />
               </div>
-              <div className="cart-item-details">
-                <h3 className="cart-item-title">{item.product.name}</h3>
+              <div className="cart-item-info">
+                <div className="cart-item-header">
+                  <h3 className="cart-item-title">{item.product.name}</h3>
+                  <div className="cart-item-price">${(item.product.price * item.quantity).toFixed(2)}</div>
+                </div>
                 <div className="cart-item-specs">
-                  <div className="cart-spec-item">
+                  <div className="cart-spec-row">
                     <span className="spec-label">Size:</span>
                     <span className="spec-value">{item.selectedSize}"</span>
                   </div>
-                  <div className="cart-spec-item">
+                  <div className="cart-spec-row">
                     <span className="spec-label">Frame:</span>
                     <span className="spec-value">
                       <span 
@@ -151,42 +154,41 @@ function Cart({ onClose }) {
                       {item.selectedColor.name}
                     </span>
                   </div>
-                  <div className="cart-spec-item">
+                  <div className="cart-spec-row">
                     <span className="spec-label">Unit Price:</span>
                     <span className="spec-value">${item.product.price.toFixed(2)}</span>
                   </div>
                 </div>
-                <div className="cart-item-quantity">
-                  <span className="quantity-label">Quantity:</span>
+                <div className="cart-item-actions">
+                  <div className="cart-item-quantity">
+                    <span className="quantity-label">Quantity:</span>
+                    <div className="quantity-controls">
+                      <button 
+                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                        className="quantity-btn"
+                      >
+                        -
+                      </button>
+                      <span className="quantity-value">{item.quantity}</span>
+                      <button 
+                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        className="quantity-btn"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
                   <button 
-                    onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                    className="quantity-btn"
+                    onClick={() => removeFromCart(item.id)}
+                    className="cart-item-remove"
                   >
-                    -
-                  </button>
-                  <span className="quantity-value">{item.quantity}</span>
-                  <button 
-                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                    className="quantity-btn"
-                  >
-                    +
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                    Remove
                   </button>
                 </div>
-              </div>
-              <div className="cart-item-price-section">
-                <div className="cart-item-total-price">
-                  ${(item.product.price * item.quantity).toFixed(2)}
-                </div>
-                <button 
-                  onClick={() => removeFromCart(item.id)}
-                  className="cart-item-remove"
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polyline points="3 6 5 6 21 6"></polyline>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                  </svg>
-                  Remove
-                </button>
               </div>
             </div>
           ))}
