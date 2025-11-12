@@ -172,10 +172,11 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
       }
       
       // Format items with BOTH Stripe and Artelo data
+      const orientation = getOrientation(selectedSize)
       const items = [{
         // Stripe fields (for checkout session)
         productId: product.id,
-        productName: `${product.name} - ${selectedSize}" ${frameType} ${material} ${selectedColor.name}`,
+        productName: `${product.name} - ${selectedSize}" ${orientation || 'Square'} ${frameType} ${material} ${selectedColor.name}`,
         price: product.price,
         quantity: quantity,
         imageUrl: image?.src || product.preview,
@@ -501,7 +502,7 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
                   <img src={product.preview} alt={product.name} className="summary-item-image" />
                   <div className="summary-item-details">
                     <h4>{product.name}</h4>
-                    <p>Size: {selectedSize}"</p>
+                    <p>Size: {selectedSize}" ({orientation || 'Square'})</p>
                     <p>Frame: {frameType} {material} - {selectedColor.name}</p>
                     <p>Print: {printType} on {paperType}</p>
                     <p>{readyToHang ? 'Ready to Hang' : 'Insert Print Yourself'}</p>
@@ -516,19 +517,22 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
                   <>
                     <div className="summary-divider"></div>
                     <h4 className="summary-section-title">Items in Cart ({cartItems.length})</h4>
-                    {cartItems.map((item) => (
-                      <div key={item.id} className="summary-item">
-                        <img src={item.product.preview} alt={item.product.name} className="summary-item-image" />
-                        <div className="summary-item-details">
-                          <h4>{item.product.name}</h4>
-                          <p>Size: {item.selectedSize}"</p>
-                          <p>Frame: {item.frameType || 'Standard'} {item.material || 'Metal'} - {item.selectedColor.name}</p>
-                          <p>Print: {item.printType || 'Poster'} on {item.paperType || 'Matte'}</p>
-                          <p>{item.framingService || 'Ready to Hang'}</p>
-                          <p className="summary-item-price">
-                            ${item.product.price.toFixed(2)} × {item.quantity} = ${(item.product.price * item.quantity).toFixed(2)}
-                          </p>
-                        </div>
+                    {cartItems.map((item) => {
+                      const [width, height] = item.selectedSize.replace('"', '').split('x').map(Number)
+                      const itemOrientation = width > height ? 'Horizontal' : width < height ? 'Vertical' : 'Square'
+                      return (
+                        <div key={item.id} className="summary-item">
+                          <img src={item.product.preview} alt={item.product.name} className="summary-item-image" />
+                          <div className="summary-item-details">
+                            <h4>{item.product.name}</h4>
+                            <p>Size: {item.selectedSize}" ({itemOrientation})</p>
+                            <p>Frame: {item.frameType || 'Standard'} {item.material || 'Metal'} - {item.selectedColor.name}</p>
+                            <p>Print: {item.printType || 'Poster'} on {item.paperType || 'Matte'}</p>
+                            <p>{item.framingService || 'Ready to Hang'}</p>
+                            <p className="summary-item-price">
+                              ${item.product.price.toFixed(2)} × {item.quantity} = ${(item.product.price * item.quantity).toFixed(2)}
+                            </p>
+                          </div>
                         <button 
                           className="summary-item-remove"
                           onClick={() => removeFromCart(item.id)}
@@ -540,7 +544,8 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
                           </svg>
                         </button>
                       </div>
-                    ))}
+                      )
+                    })}
                   </>
                 )}
 

@@ -71,13 +71,15 @@ function Cart({ onClose }) {
       }
       
       // Format cart items with BOTH Stripe and Artelo data
-      const items = cartItems.map((item, index) => ({
-        // Stripe fields (for checkout session)
-        productId: item.product.id,
-        productName: `${item.product.name} - ${item.selectedSize}" ${item.frameType || 'Standard'} ${item.material || 'Metal'} ${item.selectedColor.name}`,
-        price: item.product.price,
-        quantity: item.quantity,
-        imageUrl: item.image?.src || item.product.preview,
+      const items = cartItems.map((item, index) => {
+        const orientation = getOrientation(item.selectedSize)
+        return {
+          // Stripe fields (for checkout session)
+          productId: item.product.id,
+          productName: `${item.product.name} - ${item.selectedSize}" ${orientation || 'Square'} ${item.frameType || 'Standard'} ${item.material || 'Metal'} ${item.selectedColor.name}`,
+          price: item.product.price,
+          quantity: item.quantity,
+          imageUrl: item.image?.src || item.product.preview,
         // Artelo API fields (for order fulfillment)
         orderItemId: `item-${item.product.id}-${index}-${Date.now()}`,
         productInfo: {
@@ -97,7 +99,8 @@ function Cart({ onClose }) {
           }
         }],
         unitPrice: item.product.price
-      }))
+        }
+      })
 
       // Add shipping as a separate line item
       items.push({
@@ -209,7 +212,12 @@ function Cart({ onClose }) {
                 <div className="cart-item-specs">
                   <div className="cart-spec-row">
                     <span className="spec-label">Size:</span>
-                    <span className="spec-value">{item.selectedSize}"</span>
+                    <span className="spec-value">
+                      {item.selectedSize}" ({(() => {
+                        const [width, height] = item.selectedSize.replace('"', '').split('x').map(Number)
+                        return width > height ? 'Horizontal' : width < height ? 'Vertical' : 'Square'
+                      })()})
+                    </span>
                   </div>
                   <div className="cart-spec-row">
                     <span className="spec-label">Frame:</span>
