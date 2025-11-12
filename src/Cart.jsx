@@ -8,7 +8,7 @@ const API_BASE_URL = 'https://imageseventsbackend-production.up.railway.app'
 
 function Cart({ onClose }) {
   const [searchParams] = useSearchParams()
-  const { cartItems, removeFromCart, updateQuantity, getCartTotal, getCartCount } = useCart()
+  const { cartItems, removeFromCart, updateQuantity, getCartTotal, getCartCount, getShippingCost, FREE_SHIPPING_THRESHOLD } = useCart()
   const [checkoutItem, setCheckoutItem] = useState(null)
   const [isProcessing, setIsProcessing] = useState(false)
 
@@ -204,26 +204,26 @@ function Cart({ onClose }) {
               <div className="cart-shipping-row">
                 <span>
                   🇺🇸 Shipping:
-                  {getCartTotal() >= 100 && <span className="free-shipping-badge">FREE</span>}
+                  {getCartTotal() >= FREE_SHIPPING_THRESHOLD && <span className="free-shipping-badge">FREE</span>}
                 </span>
                 <span>
-                  {getCartTotal() >= 100 ? (
-                    <span className="free-shipping">$7.00</span>
+                  {getCartTotal() >= FREE_SHIPPING_THRESHOLD ? (
+                    <span className="free-shipping">${getShippingCost().toFixed(2)}</span>
                   ) : (
-                    '$7.00'
+                    `$${getShippingCost().toFixed(2)}`
                   )}
                 </span>
               </div>
-              {getCartTotal() < 100 && (
+              {getCartTotal() < FREE_SHIPPING_THRESHOLD && (
                 <div className="cart-shipping-notice">
-                  Add ${(100 - getCartTotal()).toFixed(2)} more for free shipping!
+                  Add ${(FREE_SHIPPING_THRESHOLD - getCartTotal()).toFixed(2)} more for free shipping!
                 </div>
               )}
             </div>
             <div className="cart-total">
               <span>Total:</span>
               <span className="cart-total-price">
-                ${(getCartTotal() + (getCartTotal() >= 100 ? 0 : 7)).toFixed(2)}
+                ${(getCartTotal() + (getCartTotal() >= FREE_SHIPPING_THRESHOLD ? 0 : getShippingCost())).toFixed(2)}
               </span>
             </div>
           </div>

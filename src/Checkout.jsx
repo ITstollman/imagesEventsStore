@@ -92,7 +92,7 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
   const [quantity, setQuantity] = useState(initialQuantity || 1)
   const [showCart, setShowCart] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
-  const { addToCart, getCartCount, getCartTotal } = useCart()
+  const { addToCart, getCartCount, getCartTotal, getShippingCost, cartItems, removeFromCart, FREE_SHIPPING_THRESHOLD } = useCart()
 
   const currentColors = material === 'Metal' ? metalColors : oakColors
 
@@ -104,14 +104,18 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
   const cartTotal = getCartTotal()
   const subtotalBeforeShipping = currentItemTotal + cartTotal
   
-  // Shipping calculation
-  const SHIPPING_COST = 7.00
-  const FREE_SHIPPING_THRESHOLD = 100.00
-  const shipping = subtotalBeforeShipping >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST
+  // Shipping calculation including the current item being configured
+  const currentItem = {
+    product,
+    selectedSize,
+    selectedColor,
+    quantity,
+    frameType,
+    material
+  }
+  const allItems = [...cartItems, currentItem]
+  const shipping = subtotalBeforeShipping >= FREE_SHIPPING_THRESHOLD ? 0 : getShippingCost(allItems)
   const grandTotal = subtotalBeforeShipping + shipping
-
-  // Get cart items for display
-  const { cartItems, removeFromCart } = useCart()
 
   const handleCheckout = async (e) => {
     e.preventDefault()
@@ -483,7 +487,7 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
                     </span>
                     <span>
                       {shipping === 0 ? (
-                        <span className="free-shipping">$7.00</span>
+                        <span className="free-shipping">${getShippingCost(allItems).toFixed(2)}</span>
                       ) : (
                         `$${shipping.toFixed(2)}`
                       )}
@@ -527,7 +531,9 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
                     image,
                     selectedSize,
                     selectedColor,
-                    quantity
+                    quantity,
+                    frameType,
+                    material
                   })
                   // Navigate back immediately
                   if (onBackToGallery) {
