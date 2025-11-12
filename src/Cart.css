@@ -265,6 +265,9 @@
   margin-top: 8px;
   border: 1px dashed #4caf50;
   animation: pulse 2s ease-in-out infinite;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .cart-total {

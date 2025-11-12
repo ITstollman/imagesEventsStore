@@ -308,6 +308,36 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
               </div>
 
               <div className="form-section">
+                <h3 className="section-title">Framing Service</h3>
+                <div className="framing-service-container">
+                  <label className={`framing-service-option ${readyToHang ? 'selected' : ''}`}>
+                    <input
+                      type="radio"
+                      name="framingService"
+                      checked={readyToHang}
+                      onChange={() => setReadyToHang(true)}
+                    />
+                    <div className="framing-service-content">
+                      <span className="framing-service-title">Ready-to-hang</span>
+                      <span className="framing-service-desc">Print is placed in frame</span>
+                    </div>
+                  </label>
+                  <label className={`framing-service-option ${!readyToHang ? 'selected' : ''}`}>
+                    <input
+                      type="radio"
+                      name="framingService"
+                      checked={!readyToHang}
+                      onChange={() => setReadyToHang(false)}
+                    />
+                    <div className="framing-service-content">
+                      <span className="framing-service-title">Insert Print Yourself</span>
+                      <span className="framing-service-desc">Print and frame shipped together</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <div className="form-section">
                 <h3 className="section-title">Add-Ons</h3>
                 <div className="addons-container">
                   <label className="addon-checkbox">
