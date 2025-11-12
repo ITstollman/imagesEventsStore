@@ -8,21 +8,42 @@ import Footer from './Footer'
 const API_BASE_URL = 'https://imageseventsbackend-production.up.railway.app'
 
 const sizes = ['8x10', '11x14', '16x20', '20x30', '24x36']
-const colors = [
-  { name: 'Black', value: '#000000' },
-  { name: 'White', value: '#FFFFFF' },
-  { name: 'Natural Wood', value: '#D4A574' },
-  { name: 'Dark Wood', value: '#5C4033' },
+
+const frameTypes = ['Standard', 'Premium']
+
+const metalColors = [
+  { name: 'Black Metal', value: '#1a1a1a', image: '/print-preview.png' },
+  { name: 'Silver Metal', value: '#c0c0c0', image: '/print-preview.png' },
+  { name: 'Gold Metal', value: '#d4af37', image: '/print-preview.png' },
+  { name: 'Rose Gold Metal', value: '#b76e79', image: '/print-preview.png' },
 ]
+
+const oakColors = [
+  { name: 'Natural Oak', value: '#D4A574', image: '/print-preview.png' },
+  { name: 'Dark Oak', value: '#5C4033', image: '/print-preview.png' },
+  { name: 'White Oak', value: '#e8dcc4', image: '/print-preview.png' },
+  { name: 'Walnut Oak', value: '#4a3426', image: '/print-preview.png' },
+]
+
+const printTypes = ['Poster', 'Photo', 'Fine Art']
+
+const paperTypes = ['Matte', 'Glossy', 'Semi Gloss', 'Semi Matte Linen']
 
 function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSize, initialColor, initialQuantity, isFromCart }) {
   const [searchParams] = useSearchParams()
   const [selectedSize, setSelectedSize] = useState(initialSize || sizes[0])
-  const [selectedColor, setSelectedColor] = useState(initialColor || colors[0])
+  const [frameType, setFrameType] = useState('Standard')
+  const [material, setMaterial] = useState('Metal')
+  const [selectedColor, setSelectedColor] = useState(metalColors[0])
+  const [printType, setPrintType] = useState('Poster')
+  const [paperType, setPaperType] = useState('Matte')
+  const [readyToHang, setReadyToHang] = useState(true)
   const [quantity, setQuantity] = useState(initialQuantity || 1)
   const [showCart, setShowCart] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const { addToCart, getCartCount, getCartTotal } = useCart()
+
+  const currentColors = material === 'Metal' ? metalColors : oakColors
 
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -161,25 +182,121 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
               </div>
 
               <div className="form-section">
-                <h3 className="section-title">Select Color</h3>
-                <div className="color-options">
-                  {colors.map((color) => (
+                <h3 className="section-title">Frame Type</h3>
+                <div className="size-options">
+                  {frameTypes.map((type) => (
                     <button
-                      key={color.name}
+                      key={type}
                       type="button"
-                      className={`color-button ${selectedColor.name === color.name ? 'selected' : ''}`}
-                      onClick={() => setSelectedColor(color)}
+                      className={`option-button ${frameType === type ? 'selected' : ''}`}
+                      onClick={() => setFrameType(type)}
                     >
-                      <span 
-                        className="color-swatch"
-                        style={{ 
-                          backgroundColor: color.value,
-                          border: color.value === '#FFFFFF' ? '1px solid #e0e0e0' : 'none'
-                        }}
-                      ></span>
-                      {color.name}
+                      {type}
                     </button>
                   ))}
+                </div>
+              </div>
+
+              <div className="form-section">
+                <h3 className="section-title">Frame Material</h3>
+                <div className="size-options">
+                  <button
+                    type="button"
+                    className={`option-button ${material === 'Metal' ? 'selected' : ''}`}
+                    onClick={() => {
+                      setMaterial('Metal')
+                      setSelectedColor(metalColors[0])
+                    }}
+                  >
+                    Metal
+                  </button>
+                  <button
+                    type="button"
+                    className={`option-button ${material === 'Oak' ? 'selected' : ''}`}
+                    onClick={() => {
+                      setMaterial('Oak')
+                      setSelectedColor(oakColors[0])
+                    }}
+                  >
+                    Oak
+                  </button>
+                </div>
+              </div>
+
+              <div className="form-section">
+                <h3 className="section-title">Frame Color</h3>
+                <div className="frame-color-grid">
+                  {currentColors.map((color) => (
+                    <div
+                      key={color.name}
+                      className={`frame-color-card ${selectedColor.name === color.name ? 'selected' : ''}`}
+                      onClick={() => setSelectedColor(color)}
+                    >
+                      <div className="frame-color-image">
+                        <img src={color.image} alt={color.name} />
+                      </div>
+                      <p className="frame-color-name">{color.name}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="form-section">
+                <h3 className="section-title">Print Type</h3>
+                <div className="size-options">
+                  {printTypes.map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      className={`option-button ${printType === type ? 'selected' : ''}`}
+                      onClick={() => setPrintType(type)}
+                    >
+                      {type}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="form-section">
+                <h3 className="section-title">Paper Type</h3>
+                <div className="paper-options">
+                  {paperTypes.map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      className={`option-button ${paperType === type ? 'selected' : ''}`}
+                      onClick={() => setPaperType(type)}
+                    >
+                      {type}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="form-section">
+                <h3 className="section-title">Installation</h3>
+                <div className="toggle-container">
+                  <button
+                    type="button"
+                    className={`toggle-option ${readyToHang ? 'selected' : ''}`}
+                    onClick={() => setReadyToHang(true)}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 16V8a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2z"></path>
+                      <polyline points="7 10 12 15 17 10"></polyline>
+                    </svg>
+                    Ready to Hang
+                  </button>
+                  <button
+                    type="button"
+                    className={`toggle-option ${!readyToHang ? 'selected' : ''}`}
+                    onClick={() => setReadyToHang(false)}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 16V8a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2z"></path>
+                    </svg>
+                    Insert Print Yourself
+                  </button>
                 </div>
               </div>
 
@@ -212,7 +329,10 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
                   <img src={product.preview} alt={product.name} className="summary-item-image" />
                   <div className="summary-item-details">
                     <h4>{product.name}</h4>
-                    <p>Size: {selectedSize}" | Color: {selectedColor.name}</p>
+                    <p>Size: {selectedSize}"</p>
+                    <p>Frame: {frameType} {material} - {selectedColor.name}</p>
+                    <p>Print: {printType} on {paperType}</p>
+                    <p>{readyToHang ? 'Ready to Hang' : 'Insert Print Yourself'}</p>
                     <p className="summary-item-price">
                       ${product.price.toFixed(2)} × {quantity} = ${currentItemTotal.toFixed(2)}
                     </p>
