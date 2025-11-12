@@ -92,6 +92,7 @@
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   transition: all 0.2s ease;
+  position: relative;
 }
 
 .cart-item:hover {
@@ -260,6 +261,10 @@
   flex-shrink: 0;
   width: 32px;
   height: 32px;
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
 }
 
 .cart-item-remove-icon:hover {
@@ -438,6 +443,14 @@
 
   .cart-item-price {
     font-size: 1.25rem;
+  }
+
+  .cart-item-remove-icon {
+    top: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(4px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   }
 
   .cart-item-specs {
