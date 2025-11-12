@@ -38,6 +38,8 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
   const [printType, setPrintType] = useState('Poster')
   const [paperType, setPaperType] = useState('Matte')
   const [readyToHang, setReadyToHang] = useState(true)
+  const [includeHangingPins, setIncludeHangingPins] = useState(false)
+  const [includeMats, setIncludeMats] = useState(false)
   const [quantity, setQuantity] = useState(initialQuantity || 1)
   const [showCart, setShowCart] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
@@ -166,8 +168,17 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
 
             <form onSubmit={handleCheckout} className="checkout-form">
               <div className="form-section">
-                <h3 className="section-title">Select Size</h3>
-                <div className="size-options">
+                <h3 className="section-title">Size</h3>
+                <select 
+                  className="mobile-select"
+                  value={selectedSize}
+                  onChange={(e) => setSelectedSize(e.target.value)}
+                >
+                  {sizes.map((size) => (
+                    <option key={size} value={size}>{size}"</option>
+                  ))}
+                </select>
+                <div className="size-options desktop-only">
                   {sizes.map((size) => (
                     <button
                       key={size}
@@ -225,25 +236,60 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
 
               <div className="form-section">
                 <h3 className="section-title">Frame Color</h3>
-                <div className="frame-color-grid">
-                  {currentColors.map((color) => (
-                    <div
-                      key={color.name}
-                      className={`frame-color-card ${selectedColor.name === color.name ? 'selected' : ''}`}
-                      onClick={() => setSelectedColor(color)}
-                    >
-                      <div className="frame-color-image">
-                        <img src={color.image} alt={color.name} />
-                      </div>
-                      <p className="frame-color-name">{color.name}</p>
+                <div className="frame-color-sections">
+                  <div className="frame-material-section">
+                    <h4 className="material-label">Metal</h4>
+                    <div className="frame-color-grid">
+                      {metalColors.map((color) => (
+                        <div
+                          key={color.name}
+                          className={`frame-color-card ${selectedColor.name === color.name ? 'selected' : ''}`}
+                          onClick={() => {
+                            setMaterial('Metal')
+                            setSelectedColor(color)
+                          }}
+                        >
+                          <div className="frame-color-image">
+                            <img src={color.image} alt={color.name} />
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  </div>
+                  <div className="frame-material-section">
+                    <h4 className="material-label">Oak</h4>
+                    <div className="frame-color-grid">
+                      {oakColors.map((color) => (
+                        <div
+                          key={color.name}
+                          className={`frame-color-card ${selectedColor.name === color.name ? 'selected' : ''}`}
+                          onClick={() => {
+                            setMaterial('Oak')
+                            setSelectedColor(color)
+                          }}
+                        >
+                          <div className="frame-color-image">
+                            <img src={color.image} alt={color.name} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
 
               <div className="form-section">
                 <h3 className="section-title">Print Type</h3>
-                <div className="size-options">
+                <select 
+                  className="mobile-select"
+                  value={printType}
+                  onChange={(e) => setPrintType(e.target.value)}
+                >
+                  {printTypes.map((type) => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </select>
+                <div className="size-options desktop-only">
                   {printTypes.map((type) => (
                     <button
                       key={type}
@@ -259,7 +305,16 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
 
               <div className="form-section">
                 <h3 className="section-title">Paper Type</h3>
-                <div className="paper-options">
+                <select 
+                  className="mobile-select"
+                  value={paperType}
+                  onChange={(e) => setPaperType(e.target.value)}
+                >
+                  {paperTypes.map((type) => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </select>
+                <div className="paper-options desktop-only">
                   {paperTypes.map((type) => (
                     <button
                       key={type}
@@ -274,29 +329,26 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
               </div>
 
               <div className="form-section">
-                <h3 className="section-title">Installation</h3>
-                <div className="toggle-container">
-                  <button
-                    type="button"
-                    className={`toggle-option ${readyToHang ? 'selected' : ''}`}
-                    onClick={() => setReadyToHang(true)}
-                  >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M21 16V8a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2z"></path>
-                      <polyline points="7 10 12 15 17 10"></polyline>
-                    </svg>
-                    Ready to Hang
-                  </button>
-                  <button
-                    type="button"
-                    className={`toggle-option ${!readyToHang ? 'selected' : ''}`}
-                    onClick={() => setReadyToHang(false)}
-                  >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M21 16V8a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2z"></path>
-                    </svg>
-                    Insert Print Yourself
-                  </button>
+                <h3 className="section-title">Add-Ons</h3>
+                <div className="addons-container">
+                  <label className="addon-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={includeHangingPins}
+                      onChange={(e) => setIncludeHangingPins(e.target.checked)}
+                    />
+                    <span>Include Hanging Pins</span>
+                    <button type="button" className="info-icon" title="Easy installation hardware included">ⓘ</button>
+                  </label>
+                  <label className="addon-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={includeMats}
+                      onChange={(e) => setIncludeMats(e.target.checked)}
+                    />
+                    <span>Include Mats</span>
+                    <button type="button" className="info-icon" title="Professional matting for enhanced presentation">ⓘ</button>
+                  </label>
                 </div>
               </div>
 

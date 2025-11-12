@@ -731,3 +731,121 @@
 .toggle-option svg {
   stroke: #000000;
 }
+
+/* Mobile Select Dropdowns */
+.mobile-select {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  background: #ffffff;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23000' d='M10.293 3.293L6 7.586 1.707 3.293A1 1 0 00.293 4.707l5 5a1 1 0 001.414 0l5-5a1 1 0 10-1.414-1.414z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  display: none;
+}
+
+.desktop-only {
+  display: flex;
+}
+
+/* Frame Material Sections */
+.frame-color-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.frame-material-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.material-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #666666;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Add-Ons */
+.addons-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.addon-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #ffffff;
+}
+
+.addon-checkbox:hover {
+  border-color: #000000;
+  background: #f9f9f9;
+}
+
+.addon-checkbox input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #000000;
+}
+
+.addon-checkbox span {
+  flex: 1;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.info-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid #999999;
+  background: none;
+  color: #999999;
+  font-size: 0.8rem;
+  cursor: help;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all 0.2s ease;
+}
+
+.info-icon:hover {
+  border-color: #000000;
+  color: #000000;
+  background: #f0f0f0;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .mobile-select {
+    display: block;
+  }
+  
+  .desktop-only {
+    display: none !important;
+  }
+  
+  .frame-type-buttons,
+  .size-options:not(.desktop-only),
+  .paper-options:not(.desktop-only) {
+    display: flex !important;
+  }
+}
