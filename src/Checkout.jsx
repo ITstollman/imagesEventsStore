@@ -1,9 +1,52 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import './Checkout.css'
 import { useCart } from './CartContext'
 import Cart from './Cart'
 import Footer from './Footer'
+
+// Custom Dropdown Component
+function CustomDropdown({ value, options, onChange, label }) {
+  const [isOpen, setIsOpen] = useState(false)
+  const dropdownRef = useRef(null)
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  return (
+    <div className="custom-dropdown" ref={dropdownRef}>
+      <div className="custom-dropdown-header" onClick={() => setIsOpen(!isOpen)}>
+        <span>{value}</span>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M13 6L8 11 3 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </div>
+      {isOpen && (
+        <div className="custom-dropdown-list">
+          {options.map((option) => (
+            <div
+              key={option}
+              className={`custom-dropdown-option ${option === value ? 'selected' : ''}`}
+              onClick={() => {
+                onChange(option)
+                setIsOpen(false)
+              }}
+            >
+              {option}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 const API_BASE_URL = 'https://imageseventsbackend-production.up.railway.app'
 
@@ -175,15 +218,13 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
             <form onSubmit={handleCheckout} className="checkout-form">
               <div className="form-section">
                 <h3 className="section-title">Size</h3>
-                <select 
-                  className="mobile-select"
-                  value={selectedSize}
-                  onChange={(e) => setSelectedSize(e.target.value)}
-                >
-                  {sizes.map((size) => (
-                    <option key={size} value={size}>{size}"</option>
-                  ))}
-                </select>
+                <div className="mobile-only">
+                  <CustomDropdown
+                    value={selectedSize + '"'}
+                    options={sizes.map(s => s + '"')}
+                    onChange={(val) => setSelectedSize(val.replace('"', ''))}
+                  />
+                </div>
                 <div className="size-options desktop-only">
                   {sizes.map((size) => (
                     <button
@@ -259,15 +300,13 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
 
               <div className="form-section">
                 <h3 className="section-title">Print Type</h3>
-                <select 
-                  className="mobile-select"
-                  value={printType}
-                  onChange={(e) => setPrintType(e.target.value)}
-                >
-                  {printTypes.map((type) => (
-                    <option key={type} value={type}>{type}</option>
-                  ))}
-                </select>
+                <div className="mobile-only">
+                  <CustomDropdown
+                    value={printType}
+                    options={printTypes}
+                    onChange={setPrintType}
+                  />
+                </div>
                 <div className="size-options desktop-only">
                   {printTypes.map((type) => (
                     <button
@@ -284,15 +323,13 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
 
               <div className="form-section">
                 <h3 className="section-title">Paper Type</h3>
-                <select 
-                  className="mobile-select"
-                  value={paperType}
-                  onChange={(e) => setPaperType(e.target.value)}
-                >
-                  {paperTypes.map((type) => (
-                    <option key={type} value={type}>{type}</option>
-                  ))}
-                </select>
+                <div className="mobile-only">
+                  <CustomDropdown
+                    value={paperType}
+                    options={paperTypes}
+                    onChange={setPaperType}
+                  />
+                </div>
                 <div className="paper-options desktop-only">
                   {paperTypes.map((type) => (
                     <button
