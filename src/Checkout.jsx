@@ -39,7 +39,7 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
   const grandTotal = subtotalBeforeShipping + shipping
 
   // Get cart items for display
-  const { cartItems } = useCart()
+  const { cartItems, removeFromCart } = useCart()
 
   const handleCheckout = async (e) => {
     e.preventDefault()
@@ -234,6 +234,16 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
                             ${item.product.price.toFixed(2)} × {item.quantity} = ${(item.product.price * item.quantity).toFixed(2)}
                           </p>
                         </div>
+                        <button 
+                          className="summary-item-remove"
+                          onClick={() => removeFromCart(item.id)}
+                          title="Remove item"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                          </svg>
+                        </button>
                       </div>
                     ))}
                   </>
