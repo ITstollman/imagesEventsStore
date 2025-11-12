@@ -66,7 +66,7 @@
   border: 1px solid rgba(224, 224, 224, 0.5);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
   padding: 50px;
-  max-width: 1600px;
+  max-width: 1200px;
   margin: 0 auto;
 }
 
@@ -81,9 +81,9 @@
 
 .checkout-grid {
   display: grid;
-  grid-template-columns: 400px 1fr;
-  gap: 50px;
-  max-width: 1400px;
+  grid-template-columns: 1fr;
+  gap: 40px;
+  max-width: 900px;
   margin: 0 auto;
 }
 
@@ -537,13 +537,12 @@
   }
 
   .checkout-grid {
-    grid-template-columns: 1fr;
-    gap: 40px;
-    max-width: 100%;
+    gap: 30px;
   }
 
-  .size-options {
-    grid-template-columns: repeat(5, 1fr);
+  .ratio-sizes {
+    grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
+    gap: 8px;
   }
 
   .preview-image-wrapper img {
@@ -569,8 +568,8 @@
     gap: 30px;
   }
 
-  .size-options {
-    grid-template-columns: repeat(4, 1fr);
+  .ratio-sizes {
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
   }
 
   .preview-image-wrapper img {
@@ -616,6 +615,12 @@
 
   .checkout-grid {
     gap: 0;
+    max-width: 100%;
+  }
+
+  .ratio-sizes {
+    grid-template-columns: repeat(auto-fill, minmax(65px, 1fr));
+    gap: 6px;
   }
 
   .preview-section {
@@ -886,14 +891,14 @@
   display: grid;
 }
 
-/* Mobile Size Ratios Container */
+/* Size Ratios Container - All Screens */
 .size-ratios-container {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 28px;
   max-height: 500px;
   overflow-y: auto;
-  padding: 4px;
+  padding: 8px 4px;
   scrollbar-width: thin;
   scrollbar-color: #d4a574 #f0f0f0;
 }
@@ -919,22 +924,23 @@
 .ratio-group {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
 .ratio-title {
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 600;
-  color: #000000;
+  color: #333333;
   margin: 0;
-  padding-bottom: 4px;
-  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e0e0e0;
+  letter-spacing: 0.02em;
 }
 
 .ratio-sizes {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+  gap: 10px;
 }
 
 .size-button {

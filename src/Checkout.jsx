@@ -233,40 +233,24 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
               <div className="form-section">
                 <h3 className="section-title">Size</h3>
                 
-                {/* Mobile - Ratio-based organization */}
-                <div className="mobile-only">
-                  <div className="size-ratios-container">
-                    {Object.entries(sizesByRatio).map(([ratio, sizes]) => (
-                      <div key={ratio} className="ratio-group">
-                        <h4 className="ratio-title">{ratio}</h4>
-                        <div className="ratio-sizes">
-                          {sizes.map((size) => (
-                            <button
-                              key={size}
-                              type="button"
-                              className={`size-button ${selectedSize === size ? 'selected' : ''}`}
-                              onClick={() => setSelectedSize(size)}
-                            >
-                              {size}"
-                            </button>
-                          ))}
-                        </div>
+                {/* Ratio-based organization for all screens */}
+                <div className="size-ratios-container">
+                  {Object.entries(sizesByRatio).map(([ratio, sizes]) => (
+                    <div key={ratio} className="ratio-group">
+                      <h4 className="ratio-title">{ratio}</h4>
+                      <div className="ratio-sizes">
+                        {sizes.map((size) => (
+                          <button
+                            key={size}
+                            type="button"
+                            className={`size-button ${selectedSize === size ? 'selected' : ''}`}
+                            onClick={() => setSelectedSize(size)}
+                          >
+                            {size}"
+                          </button>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Desktop - All sizes in a grid */}
-                <div className="size-options desktop-only">
-                  {allSizes.map((size) => (
-                    <button
-                      key={size}
-                      type="button"
-                      className={`option-button ${selectedSize === size ? 'selected' : ''}`}
-                      onClick={() => setSelectedSize(size)}
-                    >
-                      {size}"
-                    </button>
+                    </div>
                   ))}
                 </div>
               </div>
