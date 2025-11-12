@@ -281,26 +281,18 @@
   color: #999999;
   font-weight: 400;
   text-decoration: line-through;
-  position: relative;
-}
-
-.free-shipping::after {
-  content: ' FREE';
-  text-decoration: none;
-  color: #4caf50;
-  font-weight: 600;
-  margin-left: 8px;
 }
 
 .shipping-notice {
-  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
-  color: #ffffff;
-  padding: 10px;
-  border-radius: 6px;
+  background: #ffffff;
+  color: #4caf50;
+  padding: 8px;
+  border-radius: 4px;
   text-align: center;
-  font-size: 0.9rem;
-  font-weight: 500;
-  margin: 8px 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-top: 8px;
+  border: 1px dashed #4caf50;
   animation: pulse 2s ease-in-out infinite;
 }
 
