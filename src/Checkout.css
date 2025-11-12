@@ -55,9 +55,9 @@
 }
 
 .checkout-content {
-  max-width: 1200px;
   margin: 0 auto;
-  padding-top: 80px;
+  padding: 80px 40px 40px;
+  max-width: 100%;
 }
 
 .checkout-card {
@@ -66,6 +66,8 @@
   border: 1px solid rgba(224, 224, 224, 0.5);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
   padding: 50px;
+  max-width: 1600px;
+  margin: 0 auto;
 }
 
 .checkout-title {
@@ -876,7 +878,12 @@
 }
 
 .desktop-only {
-  display: flex;
+  display: block;
+}
+
+.size-options.desktop-only,
+.paper-options.desktop-only {
+  display: grid;
 }
 
 /* Mobile Size Ratios Container */
