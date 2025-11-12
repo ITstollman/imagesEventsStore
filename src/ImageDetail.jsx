@@ -7,6 +7,14 @@ import { useCart } from './CartContext'
 
 const API_BASE_URL = 'https://imageseventsbackend-production.up.railway.app'
 
+// Frame colors
+const frameColors = [
+  { name: 'Black', value: '#000000' },
+  { name: 'White', value: '#FFFFFF' },
+  { name: 'Natural Wood', value: '#D4A574' },
+  { name: 'Dark Wood', value: '#5C4033' },
+]
+
 // Default fallback products if none are provided from API
 const defaultProducts = [
   { 
@@ -205,6 +213,19 @@ function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
               >
                 <div className="product-image">
                   <img src={product.preview} alt={product.name} />
+                  <div className="product-colors">
+                    {frameColors.map((color) => (
+                      <span
+                        key={color.name}
+                        className="product-color-circle"
+                        style={{
+                          backgroundColor: color.value,
+                          border: color.value === '#FFFFFF' ? '1px solid #d0d0d0' : 'none'
+                        }}
+                        title={color.name}
+                      ></span>
+                    ))}
+                  </div>
                 </div>
                 <div className="product-info">
                   <h3 className="product-name">{product.name}</h3>
