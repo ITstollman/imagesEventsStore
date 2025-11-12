@@ -220,14 +220,20 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
                     <span>${cartTotal.toFixed(2)}</span>
                   </div>
                 )}
-                <div className="price-row shipping-row">
-                  <span>
-                    🇺🇸 Shipping:
-                    {shipping === 0 && <span className="free-shipping-badge">FREE</span>}
-                  </span>
-                  <span className={shipping === 0 ? 'free-shipping' : ''}>
-                    ${shipping.toFixed(2)}
-                  </span>
+                <div className="shipping-container">
+                  <div className="price-row shipping-row">
+                    <span>
+                      🇺🇸 Shipping:
+                      {shipping === 0 && <span className="free-shipping-badge">FREE</span>}
+                    </span>
+                    <span>
+                      {shipping === 0 ? (
+                        <span className="free-shipping">$7.00</span>
+                      ) : (
+                        `$${shipping.toFixed(2)}`
+                      )}
+                    </span>
+                  </div>
                 </div>
                 {subtotalBeforeShipping < FREE_SHIPPING_THRESHOLD && subtotalBeforeShipping >= (FREE_SHIPPING_THRESHOLD - 20) && (
                   <div className="shipping-notice">

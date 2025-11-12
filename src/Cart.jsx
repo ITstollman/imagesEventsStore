@@ -201,14 +201,20 @@ function Cart({ onClose }) {
               <span>Subtotal:</span>
               <span>${getCartTotal().toFixed(2)}</span>
             </div>
-            <div className="cart-shipping-row">
-              <span>
-                🇺🇸 Shipping:
-                {getCartTotal() >= 100 && <span className="free-shipping-badge">FREE</span>}
-              </span>
-              <span className={getCartTotal() >= 100 ? 'free-shipping' : ''}>
-                ${getCartTotal() >= 100 ? '0.00' : '7.00'}
-              </span>
+            <div className="cart-shipping-container">
+              <div className="cart-shipping-row">
+                <span>
+                  🇺🇸 Shipping:
+                  {getCartTotal() >= 100 && <span className="free-shipping-badge">FREE</span>}
+                </span>
+                <span>
+                  {getCartTotal() >= 100 ? (
+                    <span className="free-shipping">$7.00</span>
+                  ) : (
+                    '$7.00'
+                  )}
+                </span>
+              </div>
             </div>
             {getCartTotal() < 100 && getCartTotal() >= 80 && (
               <div className="cart-shipping-notice">
