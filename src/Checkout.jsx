@@ -22,11 +22,15 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
   const [quantity, setQuantity] = useState(initialQuantity || 1)
   const [showCart, setShowCart] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
-  const { addToCart, getCartCount } = useCart()
+  const { addToCart, getCartCount, getCartTotal } = useCart()
 
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [])
+
+  const currentItemTotal = product.price * quantity
+  const cartTotal = getCartTotal()
+  const grandTotal = currentItemTotal + cartTotal
 
   const handleCheckout = async (e) => {
     e.preventDefault()
@@ -200,9 +204,19 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
                   <span>Quantity:</span>
                   <span>{quantity}</span>
                 </div>
+                <div className="price-row">
+                  <span>Subtotal:</span>
+                  <span>${currentItemTotal.toFixed(2)}</span>
+                </div>
+                {cartTotal > 0 && (
+                  <div className="price-row cart-total">
+                    <span>Cart ({getCartCount()} items):</span>
+                    <span>${cartTotal.toFixed(2)}</span>
+                  </div>
+                )}
                 <div className="price-row total">
-                  <span>Total:</span>
-                  <span>${(product.price * quantity).toFixed(2)}</span>
+                  <span>{cartTotal > 0 ? 'Grand Total:' : 'Total:'}</span>
+                  <span>${grandTotal.toFixed(2)}</span>
                 </div>
               </div>
 

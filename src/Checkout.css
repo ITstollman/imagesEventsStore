@@ -239,6 +239,19 @@
   color: #000000;
 }
 
+.price-row.cart-total {
+  font-size: 0.9rem;
+  color: #666666;
+  padding: 8px 0;
+  border-top: 1px solid #d0d0d0;
+  border-bottom: 1px solid #d0d0d0;
+  margin: 4px 0;
+  background: #fafafa;
+  padding-left: 8px;
+  padding-right: 8px;
+  border-radius: 4px;
+}
+
 .price-row.total {
   font-size: 1.3rem;
   font-weight: 400;
