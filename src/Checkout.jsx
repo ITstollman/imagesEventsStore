@@ -91,6 +91,7 @@ const paperTypes = ['Matte', 'Glossy', 'Semi Gloss', 'Semi Matte Linen']
 function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSize, initialColor, initialQuantity, isFromCart }) {
   const [searchParams] = useSearchParams()
   const [selectedSize, setSelectedSize] = useState(initialSize || '8x10')
+  const [orientation, setOrientation] = useState('Vertical')
   const [frameType, setFrameType] = useState('Standard')
   const [material, setMaterial] = useState('Metal')
   const [selectedColor, setSelectedColor] = useState(metalColors[0])
@@ -172,11 +173,10 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
       }
       
       // Format items with BOTH Stripe and Artelo data
-      const orientation = getOrientation(selectedSize)
       const items = [{
         // Stripe fields (for checkout session)
         productId: product.id,
-        productName: `${product.name} - ${selectedSize}" ${orientation || 'Square'} ${frameType} ${material} ${selectedColor.name}`,
+        productName: `${product.name} - ${selectedSize}" ${orientation} ${frameType} ${material} ${selectedColor.name}`,
         price: product.price,
         quantity: quantity,
         imageUrl: image?.src || product.preview,
@@ -188,7 +188,7 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
           includeFramingService: readyToHang,
           includeHangingPins: includeHangingPins,
           includeMats: includeMats,
-          orientation: getOrientation(selectedSize),
+          orientation: orientation,
           paperType: getPaperType(printType, paperType),
           size: formatSize(selectedSize),
           unitCost: product.price
@@ -286,6 +286,28 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
             </div>
 
             <form onSubmit={handleCheckout} className="checkout-form">
+              <div className="form-section">
+                <h3 className="section-title">Orientation</h3>
+                <div className="size-options">
+                  <button
+                    key="Horizontal"
+                    type="button"
+                    className={`option-button ${orientation === 'Horizontal' ? 'selected' : ''}`}
+                    onClick={() => setOrientation('Horizontal')}
+                  >
+                    Horizontal
+                  </button>
+                  <button
+                    key="Vertical"
+                    type="button"
+                    className={`option-button ${orientation === 'Vertical' ? 'selected' : ''}`}
+                    onClick={() => setOrientation('Vertical')}
+                  >
+                    Vertical
+                  </button>
+                </div>
+              </div>
+
               <div className="form-section">
                 <h3 className="section-title">Size</h3>
                 
@@ -502,7 +524,7 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
                   <img src={product.preview} alt={product.name} className="summary-item-image" />
                   <div className="summary-item-details">
                     <h4>{product.name}</h4>
-                    <p>Size: {selectedSize}" ({orientation || 'Square'})</p>
+                    <p>Size: {selectedSize}" ({orientation})</p>
                     <p>Frame: {frameType} {material} - {selectedColor.name}</p>
                     <p>Print: {printType} on {paperType}</p>
                     <p>{readyToHang ? 'Ready to Hang' : 'Insert Print Yourself'}</p>
@@ -518,14 +540,12 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
                     <div className="summary-divider"></div>
                     <h4 className="summary-section-title">Items in Cart ({cartItems.length})</h4>
                     {cartItems.map((item) => {
-                      const [width, height] = item.selectedSize.replace('"', '').split('x').map(Number)
-                      const itemOrientation = width > height ? 'Horizontal' : width < height ? 'Vertical' : 'Square'
                       return (
                         <div key={item.id} className="summary-item">
                           <img src={item.product.preview} alt={item.product.name} className="summary-item-image" />
                           <div className="summary-item-details">
                             <h4>{item.product.name}</h4>
-                            <p>Size: {item.selectedSize}" ({itemOrientation})</p>
+                            <p>Size: {item.selectedSize}" ({item.orientation || 'Vertical'})</p>
                             <p>Frame: {item.frameType || 'Standard'} {item.material || 'Metal'} - {item.selectedColor.name}</p>
                             <p>Print: {item.printType || 'Poster'} on {item.paperType || 'Matte'}</p>
                             <p>{item.framingService || 'Ready to Hang'}</p>
@@ -605,6 +625,7 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
                     product,
                     image,
                     selectedSize,
+                    orientation,
                     selectedColor,
                     quantity,
                     frameType,

@@ -72,11 +72,10 @@ function Cart({ onClose }) {
       
       // Format cart items with BOTH Stripe and Artelo data
       const items = cartItems.map((item, index) => {
-        const orientation = getOrientation(item.selectedSize)
         return {
           // Stripe fields (for checkout session)
           productId: item.product.id,
-          productName: `${item.product.name} - ${item.selectedSize}" ${orientation || 'Square'} ${item.frameType || 'Standard'} ${item.material || 'Metal'} ${item.selectedColor.name}`,
+          productName: `${item.product.name} - ${item.selectedSize}" ${item.orientation || 'Vertical'} ${item.frameType || 'Standard'} ${item.material || 'Metal'} ${item.selectedColor.name}`,
           price: item.product.price,
           quantity: item.quantity,
           imageUrl: item.image?.src || item.product.preview,
@@ -88,7 +87,7 @@ function Cart({ onClose }) {
           includeFramingService: (item.framingService || 'Ready-to-hang') === 'Ready-to-hang',
           includeHangingPins: item.includeHangingPins || false,
           includeMats: item.includeMats || false,
-          orientation: getOrientation(item.selectedSize),
+          orientation: item.orientation || 'Vertical',
           paperType: getPaperType(item.printType, item.paperType),
           size: formatSize(item.selectedSize),
           unitCost: item.product.price
@@ -213,10 +212,7 @@ function Cart({ onClose }) {
                   <div className="cart-spec-row">
                     <span className="spec-label">Size:</span>
                     <span className="spec-value">
-                      {item.selectedSize}" ({(() => {
-                        const [width, height] = item.selectedSize.replace('"', '').split('x').map(Number)
-                        return width > height ? 'Horizontal' : width < height ? 'Vertical' : 'Square'
-                      })()})
+                      {item.selectedSize}" ({item.orientation || 'Vertical'})
                     </span>
                   </div>
                   <div className="cart-spec-row">
