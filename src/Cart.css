@@ -337,10 +337,12 @@
   color: #ffffff;
   border: none;
   border-radius: 8px;
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s ease;
+  text-align: center;
+  display: block;
 }
 
 .cart-checkout-btn:hover {
@@ -350,6 +352,10 @@
 .cart-checkout-btn:disabled {
   background: #cccccc;
   cursor: not-allowed;
+}
+
+.cart-checkout-btn:active {
+  transform: scale(0.98);
 }
 
 .cart-empty {
@@ -369,19 +375,20 @@
   justify-content: center;
   gap: 6px;
   margin-top: 12px;
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   color: #666666;
 }
 
 .cart-secure-badge svg {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   fill: #5469d4;
 }
 
 .cart-stripe-logo {
   font-weight: 600;
   color: #5469d4;
+  font-size: 0.95rem;
 }
 
 @keyframes pulse {
