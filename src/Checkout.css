@@ -747,6 +747,26 @@
   display: none;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: all 0.2s ease;
+  scrollbar-width: thin;
+  scrollbar-color: #d4a574 #f0f0f0;
+}
+
+.mobile-select::-webkit-scrollbar {
+  width: 8px;
+}
+
+.mobile-select::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 4px;
+}
+
+.mobile-select::-webkit-scrollbar-thumb {
+  background: #d4a574;
+  border-radius: 4px;
+}
+
+.mobile-select::-webkit-scrollbar-thumb:hover {
+  background: #c49563;
 }
 
 .mobile-select:hover {
@@ -776,6 +796,27 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  scrollbar-width: thin;
+  scrollbar-color: #d4a574 #f0f0f0;
+}
+
+.frame-color-sections::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.frame-color-sections::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 4px;
+}
+
+.frame-color-sections::-webkit-scrollbar-thumb {
+  background: #d4a574;
+  border-radius: 4px;
+}
+
+.frame-color-sections::-webkit-scrollbar-thumb:hover {
+  background: #c49563;
 }
 
 .frame-material-section {
@@ -836,12 +877,31 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  flex: 1;
+}
+
+.framing-service-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
 }
 
 .framing-service-title {
   font-size: 1rem;
   font-weight: 600;
   color: #000000;
+}
+
+.framing-service-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #4caf50;
+  background: #e8f5e9;
+  padding: 3px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  text-transform: lowercase;
 }
 
 .framing-service-desc {

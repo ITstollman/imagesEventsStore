@@ -330,7 +330,10 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
                       onChange={() => setReadyToHang(false)}
                     />
                     <div className="framing-service-content">
-                      <span className="framing-service-title">Insert Print Yourself</span>
+                      <div className="framing-service-header">
+                        <span className="framing-service-title">Insert Print Yourself</span>
+                        <span className="framing-service-badge">-save $5</span>
+                      </div>
                       <span className="framing-service-desc">Print and frame shipped together</span>
                     </div>
                   </label>
