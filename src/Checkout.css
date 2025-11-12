@@ -849,3 +849,34 @@
     display: flex !important;
   }
 }
+
+/* Custom Scrollbar Styling */
+.price-summary::-webkit-scrollbar,
+.checkout-form::-webkit-scrollbar {
+  width: 8px;
+}
+
+.price-summary::-webkit-scrollbar-track,
+.checkout-form::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 10px;
+}
+
+.price-summary::-webkit-scrollbar-thumb,
+.checkout-form::-webkit-scrollbar-thumb {
+  background: #c0c0c0;
+  border-radius: 10px;
+  transition: background 0.2s ease;
+}
+
+.price-summary::-webkit-scrollbar-thumb:hover,
+.checkout-form::-webkit-scrollbar-thumb:hover {
+  background: #a0a0a0;
+}
+
+/* Firefox Scrollbar */
+.price-summary,
+.checkout-form {
+  scrollbar-width: thin;
+  scrollbar-color: #c0c0c0 #f0f0f0;
+}
