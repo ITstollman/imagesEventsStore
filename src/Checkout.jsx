@@ -50,7 +50,17 @@ function CustomDropdown({ value, options, onChange, label }) {
 
 const API_BASE_URL = 'https://imageseventsbackend-production.up.railway.app'
 
-const sizes = ['8x10', '11x14', '16x20', '20x30', '24x36']
+// Sizes organized by ratio
+const sizesByRatio = {
+  '1:1 Ratio': ['6x6', '8x8', '10x10', '12x12', '14x14', '16x16', '18x18', '20x20', '24x24', '28x28', '30x30', '32x32', '36x36', '40x40'],
+  '2:3 Ratio': ['4x6', '8x12', '12x18', '16x24', '20x30', '24x36', '32x48', '36x54', '40x60', '18x27'],
+  '3:4 Ratio': ['6x8', '9x12', '12x16', '18x24', '24x32', '30x40', '36x48'],
+  '4:5 Ratio': ['8x10', '16x20', '20x25', '24x30'],
+  'Other Ratios': ['4x10', '5x7', '5x10', '5x12', '6.8x16', '6x12', '8x20', '8x24', '8x28', '8.5x11', '9x11', '9x18', '10x13', '10x17', '10x20', '10x24', '10x30', '10x36', '11x14', '11x17', '11x22', '12x14', '12x20', '12x24', '12x36', '13x19', '14x18', '14x20', '14x23', '14x24']
+}
+
+// Flatten all sizes for easy access
+const allSizes = Object.values(sizesByRatio).flat()
 
 const frameTypes = ['Standard', 'Premium']
 
@@ -80,7 +90,7 @@ const paperTypes = ['Matte', 'Glossy', 'Semi Gloss', 'Semi Matte Linen']
 
 function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSize, initialColor, initialQuantity, isFromCart }) {
   const [searchParams] = useSearchParams()
-  const [selectedSize, setSelectedSize] = useState(initialSize || sizes[0])
+  const [selectedSize, setSelectedSize] = useState(initialSize || '8x10')
   const [frameType, setFrameType] = useState('Standard')
   const [material, setMaterial] = useState('Metal')
   const [selectedColor, setSelectedColor] = useState(metalColors[0])
@@ -222,15 +232,33 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
             <form onSubmit={handleCheckout} className="checkout-form">
               <div className="form-section">
                 <h3 className="section-title">Size</h3>
+                
+                {/* Mobile - Ratio-based organization */}
                 <div className="mobile-only">
-                  <CustomDropdown
-                    value={selectedSize + '"'}
-                    options={sizes.map(s => s + '"')}
-                    onChange={(val) => setSelectedSize(val.replace('"', ''))}
-                  />
+                  <div className="size-ratios-container">
+                    {Object.entries(sizesByRatio).map(([ratio, sizes]) => (
+                      <div key={ratio} className="ratio-group">
+                        <h4 className="ratio-title">{ratio}</h4>
+                        <div className="ratio-sizes">
+                          {sizes.map((size) => (
+                            <button
+                              key={size}
+                              type="button"
+                              className={`size-button ${selectedSize === size ? 'selected' : ''}`}
+                              onClick={() => setSelectedSize(size)}
+                            >
+                              {size}"
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
+
+                {/* Desktop - All sizes in a grid */}
                 <div className="size-options desktop-only">
-                  {sizes.map((size) => (
+                  {allSizes.map((size) => (
                     <button
                       key={size}
                       type="button"
