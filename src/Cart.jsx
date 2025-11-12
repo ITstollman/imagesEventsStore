@@ -215,7 +215,7 @@ function Cart({ onClose }) {
                   )}
                 </span>
               </div>
-              {getCartTotal() < 100 && getCartTotal() >= 80 && (
+              {getCartTotal() < 100 && (
                 <div className="cart-shipping-notice">
                   Add ${(100 - getCartTotal()).toFixed(2)} more for free shipping!
                 </div>

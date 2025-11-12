@@ -234,7 +234,7 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
                       )}
                     </span>
                   </div>
-                  {subtotalBeforeShipping < FREE_SHIPPING_THRESHOLD && subtotalBeforeShipping >= (FREE_SHIPPING_THRESHOLD - 20) && (
+                  {shipping !== 0 && (
                     <div className="shipping-notice">
                       Add ${(FREE_SHIPPING_THRESHOLD - subtotalBeforeShipping).toFixed(2)} more for free shipping!
                     </div>
