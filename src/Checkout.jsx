@@ -38,6 +38,9 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
   const shipping = subtotalBeforeShipping >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST
   const grandTotal = subtotalBeforeShipping + shipping
 
+  // Get cart items for display
+  const { cartItems } = useCart()
+
   const handleCheckout = async (e) => {
     e.preventDefault()
     setIsProcessing(true)
@@ -202,31 +205,45 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
               </div>
 
               <div className="price-summary">
+                <h3 className="summary-title">Order Summary</h3>
+                
+                {/* Current Item */}
                 <div className="summary-item">
                   <img src={product.preview} alt={product.name} className="summary-item-image" />
                   <div className="summary-item-details">
                     <h4>{product.name}</h4>
                     <p>Size: {selectedSize}" | Color: {selectedColor.name}</p>
+                    <p className="summary-item-price">
+                      ${product.price.toFixed(2)} × {quantity} = ${currentItemTotal.toFixed(2)}
+                    </p>
                   </div>
                 </div>
-                <div className="price-row">
-                  <span>Price:</span>
-                  <span>${product.price.toFixed(2)}</span>
-                </div>
-                <div className="price-row">
-                  <span>Quantity:</span>
-                  <span>{quantity}</span>
-                </div>
+
+                {/* Cart Items */}
+                {cartItems.length > 0 && (
+                  <>
+                    <div className="summary-divider"></div>
+                    <h4 className="summary-section-title">Items in Cart ({cartItems.length})</h4>
+                    {cartItems.map((item) => (
+                      <div key={item.id} className="summary-item">
+                        <img src={item.product.preview} alt={item.product.name} className="summary-item-image" />
+                        <div className="summary-item-details">
+                          <h4>{item.product.name}</h4>
+                          <p>Size: {item.selectedSize}" | Color: {item.selectedColor.name}</p>
+                          <p className="summary-item-price">
+                            ${item.product.price.toFixed(2)} × {item.quantity} = ${(item.product.price * item.quantity).toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                )}
+
+                <div className="summary-divider"></div>
                 <div className="price-row">
                   <span>Subtotal:</span>
-                  <span>${currentItemTotal.toFixed(2)}</span>
+                  <span>${subtotalBeforeShipping.toFixed(2)}</span>
                 </div>
-                {cartTotal > 0 && (
-                  <div className="price-row cart-total">
-                    <span>Cart ({getCartCount()} items):</span>
-                    <span>${cartTotal.toFixed(2)}</span>
-                  </div>
-                )}
                 <div className="shipping-container">
                   <div className="price-row shipping-row">
                     <span>
