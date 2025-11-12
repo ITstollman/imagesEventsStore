@@ -40,39 +40,56 @@ function Cart({ onClose }) {
       
       // Helper functions
       const formatSize = (size) => `x${size.replace('"', '')}`
-      const formatPaperType = (type) => {
-        const paperTypeMap = {
-          'Matte': 'Matte',
-          'Glossy': 'Glossy',
-          'Semi Gloss': 'SemiGloss',
-          'Semi Matte Linen': 'SemiMatteLinen'
+      
+      const getFrameColor = (frameType, material, colorName) => {
+        const color = (colorName || 'Black').replace(/\s+/g, '')
+        const type = frameType || 'Standard'
+        const mat = material || 'Metal'
+        if (type === 'Premium') {
+          return mat === 'Oak' ? `${color}PremiumOak` : `${color}PremiumMetal`
+        } else {
+          return mat === 'Oak' ? `${color}Oak` : `${color}Metal`
         }
-        return paperTypeMap[type] || type.replace(/\s+/g, '')
-      }
-      const getOrientation = (size) => {
-        const [width, height] = size.replace('"', '').split('x').map(Number)
-        return width > height ? 'Horizontal' : width < height ? 'Vertical' : 'Square'
       }
       
-      // Format cart items with backend-expected structure
-      const items = cartItems.map(item => ({
-        productId: item.product.id,
-        productName: `${item.product.name} - ${item.selectedSize}" ${item.frameType || 'Standard'} ${item.material || 'Metal'} ${item.selectedColor.name}`,
-        price: item.product.price,
-        quantity: item.quantity,
-        imageUrl: item.image?.src || item.product.preview,
-        product: {
+      const getPaperType = (printType, paperType) => {
+        const paper = (paperType || 'Matte').replace(/\s+/g, '')
+        const print = printType || 'Poster'
+        if (print === 'Poster') {
+          return `${paper}Poster`
+        } else if (print === 'Photo') {
+          return `${paper}Photo`
+        } else {
+          return `Archival${paper}FineArt`
+        }
+      }
+      
+      const getOrientation = (size) => {
+        const [width, height] = size.replace('"', '').split('x').map(Number)
+        return width > height ? 'Horizontal' : width < height ? 'Vertical' : null
+      }
+      
+      // Format cart items with Artelo API structure
+      const items = cartItems.map((item, index) => ({
+        orderItemId: `item-${item.product.id}-${index}-${Date.now()}`,
+        productInfo: {
           catalogProductId: "IndividualArtPrint",
-          frameColor: (item.selectedColor.name || 'Black').replace(/\s+/g, ''),
-          frameStyle: item.material || 'Metal',
+          frameColor: getFrameColor(item.frameType, item.material, item.selectedColor.name),
           includeFramingService: (item.framingService || 'Ready-to-hang') === 'Ready-to-hang',
           includeHangingPins: item.includeHangingPins || false,
           includeMats: item.includeMats || false,
           orientation: getOrientation(item.selectedSize),
-          paperStyle: (item.printType || 'Poster').replace(/\s+/g, ''),
-          paperType: formatPaperType(item.paperType || 'Matte'),
-          size: formatSize(item.selectedSize)
-        }
+          paperType: getPaperType(item.printType, item.paperType),
+          size: formatSize(item.selectedSize),
+          unitCost: item.product.price
+        },
+        designs: [{
+          sourceImage: {
+            url: item.image?.src || item.product.preview
+          }
+        }],
+        quantity: item.quantity,
+        unitPrice: item.product.price
       }))
 
       // Add shipping as a separate line item

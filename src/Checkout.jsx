@@ -142,42 +142,55 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
       // Helper function to format size (e.g., "8x10" → "x8x10")
       const formatSize = (size) => `x${size.replace('"', '')}`
       
-      // Helper function to format paper type
-      const formatPaperType = (type) => {
-        const paperTypeMap = {
-          'Matte': 'Matte',
-          'Glossy': 'Glossy',
-          'Semi Gloss': 'SemiGloss',
-          'Semi Matte Linen': 'SemiMatteLinen'
+      // Helper function to get Artelo frameColor enum
+      const getFrameColor = (frameType, material, colorName) => {
+        const color = colorName.replace(/\s+/g, '')
+        if (frameType === 'Premium') {
+          return material === 'Oak' ? `${color}PremiumOak` : `${color}PremiumMetal`
+        } else {
+          return material === 'Oak' ? `${color}Oak` : `${color}Metal`
         }
-        return paperTypeMap[type] || type.replace(/\s+/g, '')
+      }
+      
+      // Helper function to get Artelo paperType enum
+      const getPaperType = (printType, paperType) => {
+        const paper = paperType.replace(/\s+/g, '')
+        if (printType === 'Poster') {
+          return `${paper}Poster`
+        } else if (printType === 'Photo') {
+          return `${paper}Photo`
+        } else {
+          return `Archival${paper}FineArt`
+        }
       }
       
       // Determine orientation from size
       const getOrientation = (size) => {
         const [width, height] = size.replace('"', '').split('x').map(Number)
-        return width > height ? 'Horizontal' : width < height ? 'Vertical' : 'Square'
+        return width > height ? 'Horizontal' : width < height ? 'Vertical' : null
       }
       
-      // Format items with backend-expected structure
+      // Format items with Artelo API structure
       const items = [{
-        productId: product.id,
-        productName: `${product.name} - ${selectedSize}" ${frameType} ${material} ${selectedColor.name}`,
-        price: product.price,
-        quantity: quantity,
-        imageUrl: image?.src || product.preview,
-        product: {
+        orderItemId: `item-${product.id}-${Date.now()}`,
+        productInfo: {
           catalogProductId: "IndividualArtPrint",
-          frameColor: selectedColor.name.replace(/\s+/g, ''),
-          frameStyle: material,
+          frameColor: getFrameColor(frameType, material, selectedColor.name),
           includeFramingService: readyToHang,
           includeHangingPins: includeHangingPins,
           includeMats: includeMats,
           orientation: getOrientation(selectedSize),
-          paperStyle: printType.replace(/\s+/g, ''),
-          paperType: formatPaperType(paperType),
-          size: formatSize(selectedSize)
-        }
+          paperType: getPaperType(printType, paperType),
+          size: formatSize(selectedSize),
+          unitCost: product.price
+        },
+        designs: [{
+          sourceImage: {
+            url: image?.src || product.preview
+          }
+        }],
+        quantity: quantity,
+        unitPrice: product.price
       }]
 
       // Add shipping as a separate line item
