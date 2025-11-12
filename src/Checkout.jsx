@@ -170,8 +170,18 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
         return width > height ? 'Horizontal' : width < height ? 'Vertical' : null
       }
       
-      // Format items with Artelo API structure
+      // Ensure price is a valid number
+      const productPrice = Number(product.price) || 0
+      
+      // Format items with both Stripe and Artelo data
       const items = [{
+        // Stripe fields
+        productId: product.id,
+        productName: `${product.name} - ${selectedSize}" ${frameType} ${material} ${selectedColor.name}`,
+        price: productPrice,
+        quantity: quantity,
+        imageUrl: image?.src || product.preview,
+        // Artelo API fields
         orderItemId: `item-${product.id}-${Date.now()}`,
         productInfo: {
           catalogProductId: "IndividualArtPrint",
@@ -182,22 +192,21 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
           orientation: getOrientation(selectedSize),
           paperType: getPaperType(printType, paperType),
           size: formatSize(selectedSize),
-          unitCost: product.price
+          unitCost: productPrice
         },
         designs: [{
           sourceImage: {
             url: image?.src || product.preview
           }
         }],
-        quantity: quantity,
-        unitPrice: product.price
+        unitPrice: productPrice
       }]
 
       // Add shipping as a separate line item
       items.push({
         productId: 'shipping',
         productName: shipping === 0 ? '🇺🇸 FREE Shipping (7 days)' : '🇺🇸 Shipping (7 days)',
-        price: shipping,
+        price: Number(shipping) || 0,
         quantity: 1
       })
 

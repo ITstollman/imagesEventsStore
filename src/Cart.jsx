@@ -69,34 +69,43 @@ function Cart({ onClose }) {
         return width > height ? 'Horizontal' : width < height ? 'Vertical' : null
       }
       
-      // Format cart items with Artelo API structure
-      const items = cartItems.map((item, index) => ({
-        orderItemId: `item-${item.product.id}-${index}-${Date.now()}`,
-        productInfo: {
-          catalogProductId: "IndividualArtPrint",
-          frameColor: getFrameColor(item.frameType, item.material, item.selectedColor.name),
-          includeFramingService: (item.framingService || 'Ready-to-hang') === 'Ready-to-hang',
-          includeHangingPins: item.includeHangingPins || false,
-          includeMats: item.includeMats || false,
-          orientation: getOrientation(item.selectedSize),
-          paperType: getPaperType(item.printType, item.paperType),
-          size: formatSize(item.selectedSize),
-          unitCost: item.product.price
-        },
-        designs: [{
-          sourceImage: {
-            url: item.image?.src || item.product.preview
-          }
-        }],
-        quantity: item.quantity,
-        unitPrice: item.product.price
-      }))
+      // Format cart items with both Stripe and Artelo data
+      const items = cartItems.map((item, index) => {
+        const itemPrice = Number(item.product.price) || 0
+        return {
+          // Stripe fields
+          productId: item.product.id,
+          productName: `${item.product.name} - ${item.selectedSize}" ${item.frameType || 'Standard'} ${item.material || 'Metal'} ${item.selectedColor.name}`,
+          price: itemPrice,
+          quantity: item.quantity,
+          imageUrl: item.image?.src || item.product.preview,
+          // Artelo API fields
+          orderItemId: `item-${item.product.id}-${index}-${Date.now()}`,
+          productInfo: {
+            catalogProductId: "IndividualArtPrint",
+            frameColor: getFrameColor(item.frameType, item.material, item.selectedColor.name),
+            includeFramingService: (item.framingService || 'Ready-to-hang') === 'Ready-to-hang',
+            includeHangingPins: item.includeHangingPins || false,
+            includeMats: item.includeMats || false,
+            orientation: getOrientation(item.selectedSize),
+            paperType: getPaperType(item.printType, item.paperType),
+            size: formatSize(item.selectedSize),
+            unitCost: itemPrice
+          },
+          designs: [{
+            sourceImage: {
+              url: item.image?.src || item.product.preview
+            }
+          }],
+          unitPrice: itemPrice
+        }
+      })
 
       // Add shipping as a separate line item
       items.push({
         productId: 'shipping',
         productName: shippingCost === 0 ? '🇺🇸 FREE Shipping (7 days)' : '🇺🇸 Shipping (7 days)',
-        price: shippingCost,
+        price: Number(shippingCost) || 0,
         quantity: 1
       })
 
