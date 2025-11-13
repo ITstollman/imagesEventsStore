@@ -113,6 +113,7 @@
   gap: 20px;
   margin-bottom: 32px;
   padding: 20px 0;
+  min-width: 0; /* Prevent grid overflow */
 }
 
 .face-circle {
@@ -511,13 +512,13 @@
   }
 
   .faces-grid {
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
     gap: 16px;
   }
 
   .face-circle {
-    width: 100px;
-    height: 100px;
+    width: 105px;
+    height: 105px;
   }
 
   .face-checkmark {
@@ -581,13 +582,13 @@
   }
 
   .faces-grid {
-    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
     gap: 12px;
   }
 
   .face-circle {
-    width: 90px;
-    height: 90px;
+    width: 85px;
+    height: 85px;
   }
 
   .face-checkmark {
