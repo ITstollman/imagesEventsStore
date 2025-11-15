@@ -289,7 +289,6 @@ function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
                       <img 
                         src={preview.compositedImage} 
                         alt={`${preview.size} frame`}
-                        crossOrigin="anonymous"
                       />
                       <div className="product-colors">
                         {frameColors.map((color) => (

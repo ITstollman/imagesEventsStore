@@ -5,16 +5,32 @@
 
 /**
  * Calculate the aspect ratio of an image
+ * Handles CORS by fetching through blob
  */
-export const getImageDimensions = (imageUrl) => {
-  return new Promise((resolve, reject) => {
-    const img = new Image()
-    img.onload = () => {
-      resolve({ width: img.naturalWidth, height: img.naturalHeight })
-    }
-    img.onerror = reject
-    img.src = imageUrl
-  })
+export const getImageDimensions = async (imageUrl) => {
+  try {
+    // Fetch image as blob to avoid CORS issues
+    const imageBlob = await fetch(imageUrl).then(res => {
+      if (!res.ok) throw new Error('Failed to fetch image')
+      return res.blob()
+    })
+    const imageBlobUrl = URL.createObjectURL(imageBlob)
+    
+    return new Promise((resolve, reject) => {
+      const img = new Image()
+      img.onload = () => {
+        URL.revokeObjectURL(imageBlobUrl)
+        resolve({ width: img.naturalWidth, height: img.naturalHeight })
+      }
+      img.onerror = () => {
+        URL.revokeObjectURL(imageBlobUrl)
+        reject(new Error('Failed to load image dimensions'))
+      }
+      img.src = imageBlobUrl
+    })
+  } catch (error) {
+    throw new Error(`Failed to get image dimensions: ${error.message}`)
+  }
 }
 
 /**
@@ -114,79 +130,98 @@ export const compositeImageIntoFrame = async (
   frameData,
   frameBaseUrl = '/organized-frames'
 ) => {
-  return new Promise((resolve, reject) => {
-    const canvas = document.createElement('canvas')
-    const ctx = canvas.getContext('2d')
-    
-    // Set canvas size to frame dimensions
-    canvas.width = frameData.imageWidth
-    canvas.height = frameData.imageHeight
-    
-    const userImage = new Image()
-    userImage.crossOrigin = 'anonymous'
-    
-    const frameImage = new Image()
-    frameImage.crossOrigin = 'anonymous'
-    
-    let userImageLoaded = false
-    let frameImageLoaded = false
-    
-    const checkBothLoaded = () => {
-      if (!userImageLoaded || !frameImageLoaded) return
+  return new Promise(async (resolve, reject) => {
+    try {
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
       
-      try {
-        // Calculate photo area dimensions from coordinates
-        const photoX = frameData.topLeft.x
-        const photoY = frameData.topLeft.y
-        const photoWidth = frameData.width
-        const photoHeight = frameData.height
+      // Set canvas size to frame dimensions
+      canvas.width = frameData.imageWidth
+      canvas.height = frameData.imageHeight
+      
+      // Fetch user image through a proxy to avoid CORS issues
+      const userImageBlob = await fetch(userImageUrl)
+        .then(res => {
+          if (!res.ok) throw new Error('Failed to fetch user image')
+          return res.blob()
+        })
+      const userImageBlobUrl = URL.createObjectURL(userImageBlob)
+      
+      const userImage = new Image()
+      const frameImage = new Image()
+      
+      let userImageLoaded = false
+      let frameImageLoaded = false
+      
+      const checkBothLoaded = () => {
+        if (!userImageLoaded || !frameImageLoaded) return
         
-        // Draw user image (fit to cover the photo area)
-        ctx.save()
-        ctx.rect(photoX, photoY, photoWidth, photoHeight)
-        ctx.clip()
-        
-        // Calculate scale to cover the photo area
-        const scaleX = photoWidth / userImage.width
-        const scaleY = photoHeight / userImage.height
-        const scale = Math.max(scaleX, scaleY)
-        
-        const scaledWidth = userImage.width * scale
-        const scaledHeight = userImage.height * scale
-        
-        // Center the image in the photo area
-        const offsetX = photoX + (photoWidth - scaledWidth) / 2
-        const offsetY = photoY + (photoHeight - scaledHeight) / 2
-        
-        ctx.drawImage(userImage, offsetX, offsetY, scaledWidth, scaledHeight)
-        ctx.restore()
-        
-        // Draw frame overlay on top
-        ctx.drawImage(frameImage, 0, 0, frameData.imageWidth, frameData.imageHeight)
-        
-        // Convert to data URL
-        resolve(canvas.toDataURL('image/png', 0.9))
-      } catch (error) {
-        reject(error)
+        try {
+          // Calculate photo area dimensions from coordinates
+          const photoX = frameData.topLeft.x
+          const photoY = frameData.topLeft.y
+          const photoWidth = frameData.width
+          const photoHeight = frameData.height
+          
+          // Draw user image (fit to cover the photo area)
+          ctx.save()
+          ctx.rect(photoX, photoY, photoWidth, photoHeight)
+          ctx.clip()
+          
+          // Calculate scale to cover the photo area
+          const scaleX = photoWidth / userImage.width
+          const scaleY = photoHeight / userImage.height
+          const scale = Math.max(scaleX, scaleY)
+          
+          const scaledWidth = userImage.width * scale
+          const scaledHeight = userImage.height * scale
+          
+          // Center the image in the photo area
+          const offsetX = photoX + (photoWidth - scaledWidth) / 2
+          const offsetY = photoY + (photoHeight - scaledHeight) / 2
+          
+          ctx.drawImage(userImage, offsetX, offsetY, scaledWidth, scaledHeight)
+          ctx.restore()
+          
+          // Draw frame overlay on top
+          ctx.drawImage(frameImage, 0, 0, frameData.imageWidth, frameData.imageHeight)
+          
+          // Clean up blob URL
+          URL.revokeObjectURL(userImageBlobUrl)
+          
+          // Convert to data URL
+          resolve(canvas.toDataURL('image/png', 0.9))
+        } catch (error) {
+          URL.revokeObjectURL(userImageBlobUrl)
+          reject(error)
+        }
       }
+      
+      userImage.onload = () => {
+        userImageLoaded = true
+        checkBothLoaded()
+      }
+      
+      frameImage.onload = () => {
+        frameImageLoaded = true
+        checkBothLoaded()
+      }
+      
+      userImage.onerror = () => {
+        URL.revokeObjectURL(userImageBlobUrl)
+        reject(new Error('Failed to load user image'))
+      }
+      frameImage.onerror = () => {
+        URL.revokeObjectURL(userImageBlobUrl)
+        reject(new Error('Failed to load frame image'))
+      }
+      
+      // Load images
+      userImage.src = userImageBlobUrl
+      frameImage.src = `${frameBaseUrl}/${framePath}`
+    } catch (error) {
+      reject(error)
     }
-    
-    userImage.onload = () => {
-      userImageLoaded = true
-      checkBothLoaded()
-    }
-    
-    frameImage.onload = () => {
-      frameImageLoaded = true
-      checkBothLoaded()
-    }
-    
-    userImage.onerror = () => reject(new Error('Failed to load user image'))
-    frameImage.onerror = () => reject(new Error('Failed to load frame image'))
-    
-    // Load images
-    userImage.src = userImageUrl
-    frameImage.src = `${frameBaseUrl}/${framePath}`
   })
 }
 
