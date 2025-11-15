@@ -4,6 +4,7 @@ import './Checkout.css'
 import { useCart } from './CartContext'
 import Cart from './Cart'
 import Footer from './Footer'
+import { fetchFrameMapping } from './api'
 
 // Custom Dropdown Component
 function CustomDropdown({ value, options, onChange, label }) {
@@ -103,9 +104,26 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
   const [quantity, setQuantity] = useState(initialQuantity || 1)
   const [showCart, setShowCart] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [frameMapping, setFrameMapping] = useState(null)
   const { addToCart, getCartCount, getCartTotal, getShippingCost, cartItems, removeFromCart, FREE_SHIPPING_THRESHOLD } = useCart()
 
   const currentColors = material === 'Metal' ? metalColors : oakColors
+
+  // Fetch frame mapping from server
+  useEffect(() => {
+    const loadFrameMapping = async () => {
+      try {
+        const mapping = await fetchFrameMapping()
+        setFrameMapping(mapping)
+        console.log('Frame mapping loaded:', mapping)
+      } catch (error) {
+        console.error('Failed to load frame mapping, using defaults:', error)
+        // Continue with hardcoded defaults if server request fails
+      }
+    }
+    
+    loadFrameMapping()
+  }, [])
 
   useEffect(() => {
     window.scrollTo(0, 0)
