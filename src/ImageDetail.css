@@ -211,7 +211,7 @@
   /* Positioned absolutely with inline styles based on frame coordinates */
   position: absolute !important;
   object-fit: cover !important;
-  z-index: 1;
+  z-index: 2;
 }
 
 .frame-preview-container .frame-image-base {
@@ -224,7 +224,7 @@
   height: 100% !important;
   object-fit: contain !important;
   display: block;
-  z-index: 2;
+  z-index: 1;
   pointer-events: none;
 }
 
