@@ -207,6 +207,13 @@
   overflow: visible !important;
 }
 
+/* New canvas-clipped layered approach */
+.clipped-photo-layer,
+.frame-overlay-layer {
+  /* Let inline styles take precedence - no !important here */
+  pointer-events: none;
+}
+
 .frame-preview-container .user-photo-preview {
   /* Positioned absolutely with inline styles based on frame coordinates */
   position: absolute !important;

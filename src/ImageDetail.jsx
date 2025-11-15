@@ -42,10 +42,11 @@ function FramePreviewCard({ preview, product, onSelect, frameColors }) {
           className="product-image frame-preview-container"
           style={{ display: bothLoaded ? 'block' : 'none' }}
         >
-          {/* Clipped user photo (behind) */}
+          {/* Clipped user photo (behind) - NO CLASSES, use inline to avoid CSS conflicts */}
           <img 
             src={preview.clippedPhotoUrl} 
             alt={`Your photo clipped`}
+            className="clipped-photo-layer"
             style={{
               position: 'absolute',
               top: 0,
@@ -53,10 +54,11 @@ function FramePreviewCard({ preview, product, onSelect, frameColors }) {
               width: '100%',
               height: '100%',
               objectFit: 'contain',
-              zIndex: 2
+              zIndex: 2,
+              display: 'block'
             }}
-            onLoad={() => {
-              console.log('✅ Clipped photo loaded:', preview.size)
+            onLoad={(e) => {
+              console.log('✅ Clipped photo loaded:', preview.size, `Natural size: ${e.target.naturalWidth}x${e.target.naturalHeight}`)
               setClippedPhotoLoaded(true)
             }}
             onError={(e) => {
@@ -68,6 +70,7 @@ function FramePreviewCard({ preview, product, onSelect, frameColors }) {
           <img 
             src={preview.frameImageUrl}
             alt={`${preview.size} frame`}
+            className="frame-overlay-layer"
             style={{
               position: 'absolute',
               top: 0,
@@ -75,10 +78,11 @@ function FramePreviewCard({ preview, product, onSelect, frameColors }) {
               width: '100%',
               height: '100%',
               objectFit: 'contain',
-              zIndex: 3
+              zIndex: 3,
+              display: 'block'
             }}
-            onLoad={() => {
-              console.log('✅ Frame overlay loaded:', preview.size)
+            onLoad={(e) => {
+              console.log('✅ Frame overlay loaded:', preview.size, `Natural size: ${e.target.naturalWidth}x${e.target.naturalHeight}`)
               setFrameOverlayLoaded(true)
             }}
             onError={(e) => {
