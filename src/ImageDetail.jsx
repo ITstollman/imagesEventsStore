@@ -257,7 +257,7 @@ function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
           const is3D = frameData.is3D && frameData.points && frameData.points.length === 4
           
           if (is3D) {
-            console.log(`🎭 3D frame detected for ${match.size}, using canvas clipping`)
+            console.log(`🎭 3D frame detected for ${match.size}, attempting canvas clipping`)
             
             // Use canvas to clip user image to the 4-point polygon
             try {
@@ -267,6 +267,8 @@ function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
                 frameData.imageWidth,
                 frameData.imageHeight
               )
+              
+              console.log(`✅ 3D clipping successful for ${match.size}`)
               
               return {
                 size: match.size,
@@ -278,8 +280,8 @@ function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
                 is3D: true
               }
             } catch (error) {
-              console.error(`❌ Failed to clip 3D frame ${match.size}:`, error)
-              // Fall back to 2D mode
+              console.warn(`⚠️ 3D clipping failed for ${match.size}, falling back to 2D:`, error.message)
+              // Fall through to 2D mode below
             }
           }
           
@@ -341,10 +343,11 @@ function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
         // Clear canvas (transparent background)
         ctx.clearRect(0, 0, canvasWidth, canvasHeight)
         
-        // Load image directly (no fetch/blob needed - Firebase serves with proper headers for img tags)
+        // Load image directly
         console.log('🎨 Loading image for 3D clipping...')
         const img = new Image()
-        img.crossOrigin = 'anonymous' // Request CORS access
+        // Note: crossOrigin causes CORS issues with Firebase Storage for canvas
+        // img.crossOrigin = 'anonymous'
         
         img.onload = () => {
           try {
