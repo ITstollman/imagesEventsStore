@@ -5,7 +5,7 @@ import Cart from './Cart'
 import Footer from './Footer'
 import { useCart } from './CartContext'
 import { fetchFrameMapping } from './api'
-import { findBestFrameSizes, buildFrameOverlayData, compositeWithCanvasClipping } from './frameCompositor'
+import { generateSimpleFramePreviews } from './frameCompositor'
 
 const API_BASE_URL = 'https://imageseventsbackend-production.up.railway.app'
 
@@ -19,98 +19,10 @@ const frameColors = [
 
 // Frame preview card with loading state
 function FramePreviewCard({ preview, product, onSelect, frameColors }) {
-  const [imageLoaded, setImageLoaded] = useState(false)
-  
-  // For composited mode, we only have one image to load
-  if (preview.mode === 'composited') {
-    return (
-      <div 
-        className="product-card"
-        onClick={imageLoaded ? onSelect : undefined}
-        style={{ cursor: imageLoaded ? 'pointer' : 'default' }}
-      >
-        {!imageLoaded && (
-          <div className="product-image skeleton">
-            <div className="skeleton-shimmer"></div>
-          </div>
-        )}
-        
-        <div 
-          className="product-image"
-          style={{ display: imageLoaded ? 'block' : 'none' }}
-        >
-          <img 
-            src={preview.compositedImage} 
-            alt={`${preview.size} frame preview`}
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'contain'
-            }}
-            onLoad={() => {
-              console.log('✅ Composited preview loaded:', preview.size)
-              setImageLoaded(true)
-            }}
-            onError={(e) => {
-              console.error('❌ Composited preview failed:', preview.size, e)
-              setImageLoaded(true)
-            }}
-          />
-          <div className="product-colors">
-            {frameColors.map((color) => (
-              <span
-                key={color.name}
-                className="product-color-circle"
-                style={{
-                  backgroundColor: color.value,
-                  border: color.value === '#FFFFFF' ? '1px solid #d0d0d0' : 'none'
-                }}
-                title={color.name}
-              ></span>
-            ))}
-          </div>
-        </div>
-        
-        <div className="product-info">
-          <h3 className="product-name">{preview.size}"</h3>
-          <p className="product-price">From $49.99</p>
-        </div>
-        <button className="product-button" disabled={!imageLoaded}>
-          {imageLoaded ? 'Select' : 'Loading...'}
-        </button>
-      </div>
-    )
-  }
-  
-  // CSS overlay mode (legacy)
   const [userPhotoLoaded, setUserPhotoLoaded] = useState(false)
   const [frameLoaded, setFrameLoaded] = useState(false)
   
   const bothLoaded = userPhotoLoaded && frameLoaded
-  const userPhotoStyle = (() => {
-    if (preview.overlay?.mode === '3d') {
-      return {
-        left: preview.overlay.boundingBox.left,
-        top: preview.overlay.boundingBox.top,
-        width: preview.overlay.boundingBox.width,
-        height: preview.overlay.boundingBox.height,
-        transform: preview.overlay.transform,
-        transformOrigin: '0 0',
-        willChange: 'transform'
-      }
-    }
-
-    if (preview.overlay?.mode === 'rect') {
-      return {
-        left: preview.overlay.rect.left,
-        top: preview.overlay.rect.top,
-        width: preview.overlay.rect.width,
-        height: preview.overlay.rect.height
-      }
-    }
-
-    return {}
-  })()
   
   return (
     <div 
@@ -118,30 +30,53 @@ function FramePreviewCard({ preview, product, onSelect, frameColors }) {
       onClick={bothLoaded ? onSelect : undefined}
       style={{ cursor: bothLoaded ? 'pointer' : 'default' }}
     >
+      {/* Show skeleton while loading */}
       {!bothLoaded && (
         <div className="product-image skeleton">
           <div className="skeleton-shimmer"></div>
         </div>
       )}
       
+      {/* Hide preview until both images loaded */}
       <div 
         className="product-image frame-preview-container"
         style={{ display: bothLoaded ? 'block' : 'none' }}
       >
+        {/* User's photo positioned behind the frame */}
         <img 
           src={preview.userImage} 
           alt={`Your photo`}
           className="user-photo-preview"
-          style={userPhotoStyle}
+          style={{
+            // Use bounding box for positioning
+            left: preview.overlayData.mode === '3d' 
+              ? preview.overlayData.boundingBox.left 
+              : preview.overlayData.rect.left,
+            top: preview.overlayData.mode === '3d' 
+              ? preview.overlayData.boundingBox.top 
+              : preview.overlayData.rect.top,
+            width: preview.overlayData.mode === '3d' 
+              ? preview.overlayData.boundingBox.width 
+              : preview.overlayData.rect.width,
+            height: preview.overlayData.mode === '3d' 
+              ? preview.overlayData.boundingBox.height 
+              : preview.overlayData.rect.height,
+            // Apply 3D transform if available
+            transform: preview.overlayData.mode === '3d' 
+              ? preview.overlayData.transform 
+              : 'none',
+            transformOrigin: '0 0'
+          }}
           onLoad={() => {
-            console.log('✅ User photo loaded:', preview.size)
+            console.log(`✅ User photo loaded: ${preview.size} (${preview.overlayData.mode} mode)`)
             setUserPhotoLoaded(true)
           }}
           onError={(e) => {
             console.error('❌ User photo failed:', preview.size, e)
-            setUserPhotoLoaded(true)
+            setUserPhotoLoaded(true) // Show anyway to prevent infinite loading
           }}
         />
+        {/* Frame overlay on top */}
         <img 
           src={preview.frameImageUrl}
           alt={`${preview.size} frame`}
@@ -152,7 +87,7 @@ function FramePreviewCard({ preview, product, onSelect, frameColors }) {
           }}
           onError={(e) => {
             console.error('❌ Frame failed:', preview.frameImageUrl)
-            setFrameLoaded(true)
+            setFrameLoaded(true) // Show anyway to prevent infinite loading
           }}
         />
         <div className="product-colors">
@@ -250,7 +185,7 @@ function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
 
   // Generate frame previews when image or mapping changes
   useEffect(() => {
-    const generateCanvasCompositedPreviews = async () => {
+    const generatePreviews = () => {
       if (!frameMapping || !image.src || !image.dimensions) {
         setLoadingPreviews(false)
         return
@@ -258,75 +193,32 @@ function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
       
       try {
         setLoadingPreviews(true)
-        console.log('🎨 Generating canvas-composited frame previews for image:', image.id)
+        console.log('🎨 Generating frame previews for image:', image.id)
         console.log('📐 Image dimensions:', image.dimensions.width, 'x', image.dimensions.height)
         
-        // Find best matching frame sizes
-        const bestMatches = findBestFrameSizes(
-          image.dimensions.width,
-          image.dimensions.height,
+        // Use the new perspective-aware preview generator
+        const previews = generateSimpleFramePreviews(
+          image.src,
+          image.dimensions,
           frameMapping,
+          'https://gallery.images.events/frameImages',
           4
         )
         
-        console.log('🎯 Best matching frames:', bestMatches.map(m => m.size).join(', '))
-        
-        // Generate composited previews using canvas
-        const previewPromises = bestMatches.map(async (match) => {
-          const frameData = match.frameData
-          const frameImageUrl = `https://gallery.images.events/frameImages/${match.framePath}`
-          
-          // Check if frame has 4 points for canvas clipping
-          if (frameData?.points && frameData.points.length === 4) {
-            try {
-              console.log(`🖼️ Compositing ${match.size} with canvas clipping...`)
-              const compositedImageUrl = await compositeWithCanvasClipping(
-                image.src,
-                frameImageUrl,
-                frameData
-              )
-              
-              return {
-                size: match.size,
-                compositedImage: compositedImageUrl,
-                framePath: match.framePath,
-                score: match.score,
-                mode: 'composited'
-              }
-            } catch (error) {
-              console.error(`❌ Failed to composite ${match.size}:`, error)
-              // Fall back to CSS overlay
-              const overlay = buildFrameOverlayData(frameData)
-              return {
-                size: match.size,
-                userImage: image.src,
-                frameImageUrl,
-                framePath: match.framePath,
-                score: match.score,
-                overlay,
-                mode: 'css-overlay'
-              }
-            }
-          } else {
-            // Legacy frames without 4 points - use CSS overlay
-            const overlay = buildFrameOverlayData(frameData)
-            return {
-              size: match.size,
-              userImage: image.src,
-              frameImageUrl,
-              framePath: match.framePath,
-              score: match.score,
-              overlay,
-              mode: 'css-overlay'
-            }
-          }
-        })
-        
-        const previews = await Promise.all(previewPromises)
-        
         setFramePreviews(previews)
         console.log('✅ Generated', previews.length, 'frame previews')
-        console.log('📍 Compositing modes:', previews.map(p => `${p.size}: ${p.mode}`).join(', '))
+        
+        // Log preview details for debugging
+        previews.forEach(preview => {
+          console.log(`📍 Frame ${preview.size}:`, {
+            mode: preview.overlayData.mode,
+            positioning: preview.overlayData.mode === '3d' 
+              ? preview.overlayData.boundingBox 
+              : preview.overlayData.rect,
+            has3DTransform: preview.overlayData.mode === '3d',
+            frameUrl: preview.frameImageUrl.substring(0, 80) + '...'
+          })
+        })
       } catch (error) {
         console.error('❌ Failed to generate frame previews:', error)
         setFramePreviews([])
@@ -335,7 +227,7 @@ function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
       }
     }
     
-    generateCanvasCompositedPreviews()
+    generatePreviews()
   }, [frameMapping, image.src, image.id, image.dimensions])
 
   // 5-second countdown before enabling download
