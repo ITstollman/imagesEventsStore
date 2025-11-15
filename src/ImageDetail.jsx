@@ -86,15 +86,19 @@ function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
         setLoadingPreviews(true)
         console.log('🎨 Generating frame previews for image:', image.id)
         
+        // Use production base URL for frame images
+        const frameBaseUrl = 'https://gallery.images.events/frameImages'
+        
         const previews = await generateFramePreviews(
           image.src,
           frameMapping,
-          '/frameImages', // Base URL for frame images
+          frameBaseUrl, // Use full production URL
           image.dimensions // Pass existing dimensions if available
         )
         
         setFramePreviews(previews)
         console.log('✅ Generated', previews.length, 'frame previews')
+        console.log('📸 Frame preview URLs:', previews.map(p => p.frameImageUrl))
       } catch (error) {
         console.error('❌ Failed to generate frame previews:', error)
       } finally {

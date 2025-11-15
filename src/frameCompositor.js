@@ -128,7 +128,7 @@ export const compositeImageIntoFrame = async (
   userImageUrl,
   framePath,
   frameData,
-  frameBaseUrl = '/frameImages'
+  frameBaseUrl = 'https://gallery.images.events/frameImages'
 ) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -236,7 +236,7 @@ export const compositeImageIntoFrame = async (
 export const generateFramePreviews = async (
   userImageUrl,
   frameMapping,
-  frameBaseUrl = '/frameImages',
+  frameBaseUrl = 'https://gallery.images.events/frameImages',
   imageDimensions = null
 ) => {
   try {
@@ -268,6 +268,7 @@ export const generateFramePreviews = async (
     const previews = await Promise.all(
       bestMatches.map(async (match) => {
         try {
+          const frameImageUrl = `${frameBaseUrl}/${match.framePath}`
           const compositedImage = await compositeImageIntoFrame(
             userImageUrl,
             match.framePath,
@@ -279,6 +280,7 @@ export const generateFramePreviews = async (
             size: match.size,
             compositedImage,
             framePath: match.framePath,
+            frameImageUrl, // Full URL to the frame overlay image
             score: match.score
           }
         } catch (error) {
