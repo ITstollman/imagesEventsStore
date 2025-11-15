@@ -310,13 +310,13 @@ export const buildFrameOverlayData = (frameData) => {
 }
 
 /**
- * Create clipped user image (without frame) - returns ONLY the user photo clipped to quad
- * This matches the debugger approach: separate images, not composited
+ * Composite user image into frame using canvas clipping (for tilted frames)
  * @param {string} userImageUrl - URL of the user's photo
+ * @param {string} frameImageUrl - URL of the frame overlay
  * @param {Object} frameData - Frame data with points array
- * @returns {Promise<string>} - Data URL of JUST the clipped user photo
+ * @returns {Promise<string>} - Data URL of the composited image
  */
-export const createClippedUserPhoto = async (userImageUrl, frameData) => {
+export const compositeWithCanvasClipping = async (userImageUrl, frameImageUrl, frameData) => {
   return new Promise((resolve, reject) => {
     // Check if we have the 4 points needed for clipping
     if (!frameData?.points || frameData.points.length !== 4) {
@@ -329,14 +329,24 @@ export const createClippedUserPhoto = async (userImageUrl, frameData) => {
     canvas.height = frameData.imageHeight || 3000
     const ctx = canvas.getContext('2d')
 
-    // Load user image only
+    // Load both images
     const userImg = new Image()
+    const frameImg = new Image()
     userImg.crossOrigin = 'anonymous'
+    frameImg.crossOrigin = 'anonymous'
 
-    userImg.onload = () => {
+    let userLoaded = false
+    let frameLoaded = false
+
+    const tryComposite = () => {
+      if (!userLoaded || !frameLoaded) return
+
       try {
-        // Clear canvas (transparent background)
+        // Clear canvas
         ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+        // Save context state before clipping
+        ctx.save()
 
         // Set clipping path from the 4 points
         ctx.beginPath()
@@ -357,20 +367,56 @@ export const createClippedUserPhoto = async (userImageUrl, frameData) => {
         const bboxWidth = maxX - minX
         const bboxHeight = maxY - minY
 
-        // Draw user image to fill bounding box (will be clipped to quad)
-        ctx.drawImage(userImg, minX, minY, bboxWidth, bboxHeight)
+        // Draw user image to fill bounding box (object-fit: cover)
+        const imageRatio = userImg.width / userImg.height
+        const bboxRatio = bboxWidth / bboxHeight
+        let drawWidth
+        let drawHeight
 
-        // Convert to data URL - ONLY the clipped user photo, no frame
-        resolve(canvas.toDataURL('image/png', 0.95))
+        if (imageRatio > bboxRatio) {
+          // Image is wider - match height, crop width
+          drawHeight = bboxHeight
+          drawWidth = bboxHeight * imageRatio
+        } else {
+          // Image is taller - match width, crop height
+          drawWidth = bboxWidth
+          drawHeight = bboxWidth / imageRatio
+        }
+
+        const drawX = minX + (bboxWidth - drawWidth) / 2
+        const drawY = minY + (bboxHeight - drawHeight) / 2
+
+        ctx.drawImage(userImg, drawX, drawY, drawWidth, drawHeight)
+
+        // Restore context to remove clipping
+        ctx.restore()
+
+        // Draw frame on top
+        ctx.drawImage(frameImg, 0, 0, canvas.width, canvas.height)
+
+        // Convert to data URL
+        resolve(canvas.toDataURL('image/png', 0.92))
       } catch (error) {
         reject(error)
       }
     }
 
+    userImg.onload = () => {
+      userLoaded = true
+      tryComposite()
+    }
+
+    frameImg.onload = () => {
+      frameLoaded = true
+      tryComposite()
+    }
+
     userImg.onerror = () => reject(new Error('Failed to load user image'))
+    frameImg.onerror = () => reject(new Error('Failed to load frame image'))
 
     // Start loading
     userImg.src = userImageUrl
+    frameImg.src = frameImageUrl
   })
 }
 
