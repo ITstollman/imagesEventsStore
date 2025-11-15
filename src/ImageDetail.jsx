@@ -325,23 +325,23 @@ function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
                     onClick={() => setSelectedProduct(product)}
                   >
                     <div className="product-image frame-preview-container">
-                      <img 
-                        src={preview.frameImageUrl}
-                        alt={`${preview.size} frame`}
-                        className="frame-image-base"
-                      />
+                      {/* User's photo positioned behind the frame */}
                       <img 
                         src={preview.userImage} 
                         alt={`Your photo`}
                         className="user-photo-preview"
                         style={{
-                          position: 'absolute',
                           left: preview.coordinates.left,
                           top: preview.coordinates.top,
                           width: preview.coordinates.width,
-                          height: preview.coordinates.height,
-                          objectFit: 'cover'
+                          height: preview.coordinates.height
                         }}
+                      />
+                      {/* Frame overlay on top */}
+                      <img 
+                        src={preview.frameImageUrl}
+                        alt={`${preview.size} frame`}
+                        className="frame-image-base"
                       />
                       <div className="product-colors">
                         {frameColors.map((color) => (
