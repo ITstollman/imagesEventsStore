@@ -98,16 +98,40 @@ function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
         console.log('🎯 Best matching frames:', bestMatches.map(m => m.size).join(', '))
         
         // Create simple preview data (no canvas compositing - use CSS overlays instead)
-        const previews = bestMatches.map(match => ({
-          size: match.size,
-          userImage: image.src, // User's actual photo
-          frameImageUrl: `https://gallery.images.events/frameImages/${match.framePath}`,
-          framePath: match.framePath,
-          score: match.score
-        }))
+        const previews = bestMatches.map(match => {
+          // Calculate photo position within frame using coordinates
+          const frameData = match.frameData
+          const photoX = frameData.topLeft.x
+          const photoY = frameData.topLeft.y
+          const photoWidth = frameData.width
+          const photoHeight = frameData.height
+          const frameWidth = frameData.imageWidth
+          const frameHeight = frameData.imageHeight
+          
+          // Calculate percentages for CSS positioning
+          const left = (photoX / frameWidth) * 100
+          const top = (photoY / frameHeight) * 100
+          const width = (photoWidth / frameWidth) * 100
+          const height = (photoHeight / frameHeight) * 100
+          
+          return {
+            size: match.size,
+            userImage: image.src,
+            frameImageUrl: `https://gallery.images.events/frameImages/${match.framePath}`,
+            framePath: match.framePath,
+            score: match.score,
+            coordinates: {
+              left: `${left}%`,
+              top: `${top}%`,
+              width: `${width}%`,
+              height: `${height}%`
+            }
+          }
+        })
         
         setFramePreviews(previews)
         console.log('✅ Generated', previews.length, 'frame previews (CSS-based)')
+        console.log('📍 Sample coordinates:', previews[0]?.coordinates)
       } catch (error) {
         console.error('❌ Failed to generate frame previews:', error)
         setFramePreviews([])
@@ -302,14 +326,22 @@ function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
                   >
                     <div className="product-image frame-preview-container">
                       <img 
+                        src={preview.frameImageUrl}
+                        alt={`${preview.size} frame`}
+                        className="frame-image-base"
+                      />
+                      <img 
                         src={preview.userImage} 
                         alt={`Your photo`}
                         className="user-photo-preview"
-                      />
-                      <img 
-                        src={preview.frameImageUrl}
-                        alt={`${preview.size} frame overlay`}
-                        className="frame-overlay-preview"
+                        style={{
+                          position: 'absolute',
+                          left: preview.coordinates.left,
+                          top: preview.coordinates.top,
+                          width: preview.coordinates.width,
+                          height: preview.coordinates.height,
+                          objectFit: 'cover'
+                        }}
                       />
                       <div className="product-colors">
                         {frameColors.map((color) => (
