@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Frame Overlay Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 40px;
+      background: #f5f5f5;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    .test-container {
+      max-width: 600px;
+      margin: 40px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .frame-preview {
+      position: relative;
+      width: 400px;
+      height: 400px;
+      margin: 20px auto;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: 2px solid #ddd;
+    }
+    .frame-preview img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .info {
+      background: #e3f2fd;
+      padding: 15px;
+      border-radius: 4px;
+      margin: 20px 0;
+    }
+    .info h3 {
+      margin: 0 0 10px 0;
+      color: #1976d2;
+    }
+    .info p {
+      margin: 5px 0;
+      color: #424242;
+    }
+    select {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 16px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🖼️ Frame Overlay Test</h1>
+  
+  <div class="test-container">
+    <div class="info">
+      <h3>ℹ️ Understanding Frame Overlays</h3>
+      <p><strong>Why frames look "blank":</strong> Frame images are overlays with transparent or white centers where your photo goes.</p>
+      <p><strong>This is correct!</strong> The colored gradient background below simulates your photo - the frame borders should be visible on top.</p>
+    </div>
+
+    <label for="frameSelect"><strong>Select a frame to test:</strong></label>
+    <select id="frameSelect">
+      <option value="/frameImages/horizontal/metal/premium/black/8x8-premium-metal.png">8x8 Premium Black Metal</option>
+      <option value="/frameImages/horizontal/metal/premium/black/H-16x20-premium-metal.png">16x20 Premium Black Metal (Horizontal)</option>
+      <option value="/frameImages/horizontal/metal/premium/gold/H-16x20-premium-metal.png">16x20 Premium Gold Metal (Horizontal)</option>
+      <option value="/frameImages/horizontal/metal/premium/white/H-16x20-premium-metal.png">16x20 Premium White Metal (Horizontal)</option>
+      <option value="/frameImages/square/metal/premium/black/10x10-premium-metal.png">10x10 Premium Black Metal (Square)</option>
+      <option value="/frameImages/vertical/metal/premium/black/20x30-premium-metal.png">20x30 Premium Black Metal (Vertical)</option>
+      <option value="/frameImages/horizontal/oak/premium/black/H-16x20-premium-oak.png">16x20 Premium Black Oak (Horizontal)</option>
+      <option value="/frameImages/horizontal/oak/premium/white/H-16x20-premium-oak.png">16x20 Premium White Oak (Horizontal)</option>
+    </select>
+
+    <div class="frame-preview">
+      <img id="frameImage" src="/frameImages/horizontal/metal/premium/black/8x8-premium-metal.png" alt="Frame overlay">
+    </div>
+
+    <div class="info">
+      <h3>✅ What You Should See:</h3>
+      <p>• The colored gradient (simulates your photo)</p>
+      <p>• The frame border overlaid on top</p>
+      <p>• The frame appears to "frame" the colored background</p>
+      <br>
+      <p><strong>Note:</strong> If you only see white, the frame might be very light or the image may have an issue. Try selecting different frames above.</p>
+    </div>
+  </div>
+
+  <script>
+    const select = document.getElementById('frameSelect');
+    const img = document.getElementById('frameImage');
+    
+    select.addEventListener('change', (e) => {
+      img.src = e.target.value;
+    });
+
+    // Log image loading
+    img.onload = () => {
+      console.log('✅ Frame loaded:', img.src);
+      console.log('Image dimensions:', img.naturalWidth, 'x', img.naturalHeight);
+    };
+    
+    img.onerror = () => {
+      console.error('❌ Failed to load frame:', img.src);
+    };
+  </script>
+</body>
+</html>
+
