@@ -17,6 +17,91 @@ const frameColors = [
   { name: 'Dark Wood', value: '#5C4033' },
 ]
 
+// Frame preview card with loading state
+function FramePreviewCard({ preview, product, onSelect, frameColors }) {
+  const [userPhotoLoaded, setUserPhotoLoaded] = useState(false)
+  const [frameLoaded, setFrameLoaded] = useState(false)
+  
+  const bothLoaded = userPhotoLoaded && frameLoaded
+  
+  return (
+    <div 
+      className="product-card"
+      onClick={bothLoaded ? onSelect : undefined}
+      style={{ cursor: bothLoaded ? 'pointer' : 'default' }}
+    >
+      {/* Show skeleton while loading */}
+      {!bothLoaded && (
+        <div className="product-image skeleton">
+          <div className="skeleton-shimmer"></div>
+        </div>
+      )}
+      
+      {/* Hide preview until both images loaded */}
+      <div 
+        className="product-image frame-preview-container"
+        style={{ display: bothLoaded ? 'block' : 'none' }}
+      >
+        {/* User's photo positioned behind the frame */}
+        <img 
+          src={preview.userImage} 
+          alt={`Your photo`}
+          className="user-photo-preview"
+          style={{
+            left: preview.coordinates.left,
+            top: preview.coordinates.top,
+            width: preview.coordinates.width,
+            height: preview.coordinates.height
+          }}
+          onLoad={() => {
+            console.log('✅ User photo loaded:', preview.size)
+            setUserPhotoLoaded(true)
+          }}
+          onError={(e) => {
+            console.error('❌ User photo failed:', preview.size, e)
+            setUserPhotoLoaded(true) // Show anyway to prevent infinite loading
+          }}
+        />
+        {/* Frame overlay on top */}
+        <img 
+          src={preview.frameImageUrl}
+          alt={`${preview.size} frame`}
+          className="frame-image-base"
+          onLoad={() => {
+            console.log('✅ Frame loaded:', preview.frameImageUrl.substring(0, 80))
+            setFrameLoaded(true)
+          }}
+          onError={(e) => {
+            console.error('❌ Frame failed:', preview.frameImageUrl)
+            setFrameLoaded(true) // Show anyway to prevent infinite loading
+          }}
+        />
+        <div className="product-colors">
+          {frameColors.map((color) => (
+            <span
+              key={color.name}
+              className="product-color-circle"
+              style={{
+                backgroundColor: color.value,
+                border: color.value === '#FFFFFF' ? '1px solid #d0d0d0' : 'none'
+              }}
+              title={color.name}
+            ></span>
+          ))}
+        </div>
+      </div>
+      
+      <div className="product-info">
+        <h3 className="product-name">{preview.size}"</h3>
+        <p className="product-price">From $49.99</p>
+      </div>
+      <button className="product-button" disabled={!bothLoaded}>
+        {bothLoaded ? 'Select' : 'Loading...'}
+      </button>
+    </div>
+  )
+}
+
 // Default fallback products if none are provided from API
 const defaultProducts = [
   { 
@@ -324,54 +409,13 @@ function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
                 }
                 
                 return (
-                  <div 
+                  <FramePreviewCard 
                     key={preview.size}
-                    className="product-card"
-                    onClick={() => setSelectedProduct(product)}
-                  >
-                    <div className="product-image frame-preview-container">
-                      {/* User's photo positioned behind the frame */}
-                      <img 
-                        src={preview.userImage} 
-                        alt={`Your photo`}
-                        className="user-photo-preview"
-                        style={{
-                          left: preview.coordinates.left,
-                          top: preview.coordinates.top,
-                          width: preview.coordinates.width,
-                          height: preview.coordinates.height
-                        }}
-                        onLoad={() => console.log('✅ User photo loaded:', preview.size)}
-                        onError={(e) => console.error('❌ User photo failed:', preview.size, e)}
-                      />
-                      {/* Frame overlay on top */}
-                      <img 
-                        src={preview.frameImageUrl}
-                        alt={`${preview.size} frame`}
-                        className="frame-image-base"
-                        onLoad={() => console.log('✅ Frame loaded:', preview.frameImageUrl.substring(0, 80))}
-                        onError={(e) => console.error('❌ Frame failed:', preview.frameImageUrl)}
-                      />
-                      <div className="product-colors">
-                        {frameColors.map((color) => (
-                          <span
-                            key={color.name}
-                            className="product-color-circle"
-                            style={{
-                              backgroundColor: color.value,
-                              border: color.value === '#FFFFFF' ? '1px solid #d0d0d0' : 'none'
-                            }}
-                            title={color.name}
-                          ></span>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="product-info">
-                      <h3 className="product-name">{preview.size}"</h3>
-                      <p className="product-price">From $49.99</p>
-                    </div>
-                    <button className="product-button">Select</button>
-                  </div>
+                    preview={preview}
+                    product={product}
+                    onSelect={() => setSelectedProduct(product)}
+                    frameColors={frameColors}
+                  />
                 )
               })}
             </div>
