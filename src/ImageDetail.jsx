@@ -19,12 +19,12 @@ const frameColors = [
 
 // Frame preview card with loading state
 function FramePreviewCard({ preview, product, onSelect, frameColors }) {
-  const [clippedPhotoLoaded, setClippedPhotoLoaded] = useState(false)
-  const [frameLoaded, setFrameLoaded] = useState(false)
-  
   // For clipped-layered mode (separate clipped photo + frame, like debugger)
   if (preview.mode === 'clipped-layered') {
-    const bothLoaded = clippedPhotoLoaded && frameLoaded
+    const [clippedPhotoLoaded, setClippedPhotoLoaded] = useState(false)
+    const [frameOverlayLoaded, setFrameOverlayLoaded] = useState(false)
+    
+    const bothLoaded = clippedPhotoLoaded && frameOverlayLoaded
     
     return (
       <div 
@@ -79,11 +79,11 @@ function FramePreviewCard({ preview, product, onSelect, frameColors }) {
             }}
             onLoad={() => {
               console.log('✅ Frame overlay loaded:', preview.size)
-              setFrameLoaded(true)
+              setFrameOverlayLoaded(true)
             }}
             onError={(e) => {
               console.error('❌ Frame overlay failed:', preview.size)
-              setFrameLoaded(true)
+              setFrameOverlayLoaded(true)
             }}
           />
           <div className="product-colors">
