@@ -153,6 +153,14 @@ function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
         const mapping = await fetchFrameMapping()
         setFrameMapping(mapping)
         console.log('✅ Frame mapping loaded for ImageDetail')
+        console.log('📦 COMPLETE FRAME MAPPING FROM SERVER:')
+        console.log(JSON.stringify(mapping, null, 2))
+        console.log('📊 Summary:', {
+          totalFrames: mapping?.data?.totalFrames,
+          organization: mapping?.data?.organization,
+          availableFrames: mapping?.data?.frames ? Object.keys(mapping.data.frames).length : 0
+        })
+        console.log('🖼️ Available frame paths:', mapping?.data?.frames ? Object.keys(mapping.data.frames) : [])
       } catch (error) {
         console.error('❌ Failed to load frame mapping:', error)
       }
