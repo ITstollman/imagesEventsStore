@@ -9,6 +9,7 @@ import Success from './Success'
 import Cancel from './Cancel'
 import Footer from './Footer'
 import { useCart } from './CartContext'
+import { fetchFrameMapping } from './api'
 
 const API_BASE_URL = 'https://imageseventsbackend-production.up.railway.app'
 
@@ -29,6 +30,33 @@ function Home() {
 
   useEffect(() => {
     window.scrollTo(0, 0)
+    
+    // Load frame mapping on initial mount
+    const loadFrameMapping = async () => {
+      try {
+        console.log('🎨 Loading frame mapping...')
+        const mapping = await fetchFrameMapping()
+        console.log('✅ Frame Mapping Response:', mapping)
+        console.log('📊 Total Frames:', mapping?.data?.totalFrames)
+        console.log('📐 Organization:', mapping?.data?.organization)
+        console.log('🔧 Version:', mapping?.data?.version)
+        console.log('📅 Uploaded At:', mapping?.data?.uploadedAt)
+        console.log('📋 Metadata:', mapping?.data?.metadata)
+        
+        // Log some example frames
+        if (mapping?.data?.frames) {
+          const frameKeys = Object.keys(mapping.data.frames)
+          console.log('🖼️ Sample frames:')
+          frameKeys.slice(0, 5).forEach(key => {
+            console.log(`  - ${key}`)
+          })
+        }
+      } catch (error) {
+        console.error('❌ Failed to load frame mapping:', error)
+      }
+    }
+    
+    loadFrameMapping()
     
     // Get event ID from URL query params
     const e = searchParams.get('e')
