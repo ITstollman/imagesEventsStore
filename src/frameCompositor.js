@@ -231,11 +231,22 @@ export const compositeImageIntoFrame = async (
 export const generateFramePreviews = async (
   userImageUrl,
   frameMapping,
-  frameBaseUrl = '/organized-frames'
+  frameBaseUrl = '/organized-frames',
+  imageDimensions = null
 ) => {
   try {
-    // Get image dimensions
-    const { width, height } = await getImageDimensions(userImageUrl)
+    // Get image dimensions (use provided dimensions if available, otherwise fetch)
+    let width, height
+    if (imageDimensions && imageDimensions.width && imageDimensions.height) {
+      console.log('✅ Using provided dimensions:', imageDimensions.width, 'x', imageDimensions.height)
+      width = imageDimensions.width
+      height = imageDimensions.height
+    } else {
+      console.log('⚠️ No dimensions provided, fetching from image...')
+      const dims = await getImageDimensions(userImageUrl)
+      width = dims.width
+      height = dims.height
+    }
     
     // Find best matching frame sizes
     const bestMatches = findBestFrameSizes(width, height, frameMapping, 4)
@@ -245,8 +256,8 @@ export const generateFramePreviews = async (
       return []
     }
     
-    console.log('📐 Image dimensions:', width, 'x', height)
-    console.log('🎯 Best matching frames:', bestMatches.map(m => m.size))
+    console.log('📐 Final dimensions used:', width, 'x', height)
+    console.log('🎯 Best matching frames:', bestMatches.map(m => m.size).join(', '))
     
     // Generate composited previews
     const previews = await Promise.all(
