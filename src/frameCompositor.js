@@ -63,18 +63,27 @@ export const parseSize = (sizeStr) => {
 /**
  * Calculate how well a frame size matches the image dimensions
  * Returns a score (lower is better)
+ * Now uses actual frame photo area dimensions instead of filename size
  */
-export const calculateFrameMatch = (imageWidth, imageHeight, frameSize) => {
-  const frame = parseSize(frameSize)
+export const calculateFrameMatch = (imageWidth, imageHeight, frameData) => {
+  // Use actual photo area dimensions from frame data
+  const frameWidth = frameData.width
+  const frameHeight = frameData.height
+  
+  if (!frameWidth || !frameHeight) {
+    console.warn('Frame missing width/height dimensions')
+    return Infinity
+  }
+  
   const imageRatio = imageWidth / imageHeight
-  const frameRatio = frame.width / frame.height
+  const frameRatio = frameWidth / frameHeight
   
   // Calculate ratio difference (penalize aspect ratio mismatch heavily)
   const ratioDiff = Math.abs(imageRatio - frameRatio)
   
   // Calculate scale difference (how much the image needs to be resized)
   const imageArea = imageWidth * imageHeight
-  const frameArea = frame.width * frame.height
+  const frameArea = frameWidth * frameHeight
   const scaleDiff = Math.abs(Math.log(frameArea / imageArea))
   
   // Weighted score: aspect ratio is more important than scale
@@ -90,36 +99,54 @@ export const findBestFrameSizes = (imageWidth, imageHeight, frameMapping, topN =
   const orientation = determineOrientation(imageWidth, imageHeight)
   const frames = frameMapping.data.frames
   
-  // Extract all unique sizes from frame paths that match orientation
-  const sizeMap = new Map()
+  console.log(`🔍 Looking for ${orientation} frames for ${imageWidth}x${imageHeight} image (ratio: ${(imageWidth/imageHeight).toFixed(2)})`)
+  
+  // Score all frames with matching orientation
+  const scoredFrames = []
   
   for (const [framePath, frameData] of Object.entries(frames)) {
-    // Only consider frames with matching orientation
-    if (frameData.orientation !== orientation) continue
+    // Calculate actual orientation from frame dimensions
+    const actualOrientation = determineOrientation(frameData.width, frameData.height)
     
-    // Extract size from filename (e.g., "H-16x20-premium-metal.png" -> "16x20")
+    // Skip frames where server orientation doesn't match actual dimensions
+    // (This handles cases where frames are miscategorized)
+    if (actualOrientation !== frameData.orientation) {
+      console.warn(`⚠️ Frame ${framePath} marked as ${frameData.orientation} but dimensions ${frameData.width}x${frameData.height} indicate ${actualOrientation}`)
+    }
+    
+    // Match based on ACTUAL orientation from dimensions, not server label
+    if (actualOrientation !== orientation) continue
+    
+    // Extract size from filename for display purposes
     const filename = framePath.split('/').pop()
     const sizeMatch = filename.match(/(\d+x\d+)/)
     
-    if (sizeMatch) {
+    if (sizeMatch && frameData.width && frameData.height) {
       const size = sizeMatch[1]
-      const score = calculateFrameMatch(imageWidth, imageHeight, size)
+      const score = calculateFrameMatch(imageWidth, imageHeight, frameData)
+      const frameRatio = frameData.width / frameData.height
       
-      if (!sizeMap.has(size) || sizeMap.get(size).score > score) {
-        sizeMap.set(size, {
-          size,
-          score,
-          framePath,
-          frameData
-        })
-      }
+      console.log(`  📏 ${size}: actual ${frameData.width}x${frameData.height} (ratio ${frameRatio.toFixed(2)}) → score: ${score.toFixed(2)}`)
+      
+      scoredFrames.push({
+        size,
+        score,
+        framePath,
+        frameData,
+        actualDimensions: `${frameData.width}x${frameData.height}`,
+        actualRatio: frameRatio
+      })
     }
   }
   
   // Sort by score and return top N
-  return Array.from(sizeMap.values())
+  const topMatches = scoredFrames
     .sort((a, b) => a.score - b.score)
     .slice(0, topN)
+  
+  console.log(`✅ Top ${topMatches.length} matches:`, topMatches.map(m => `${m.size} (${m.actualDimensions}, score: ${m.score.toFixed(2)})`).join(', '))
+  
+  return topMatches
 }
 
 /**
