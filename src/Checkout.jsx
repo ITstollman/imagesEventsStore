@@ -4,7 +4,7 @@ import './Checkout.css'
 import { useCart } from './CartContext'
 import Cart from './Cart'
 import Footer from './Footer'
-import { fetchFrameMapping } from './api'
+import { fetchFrameMapping, findFrame } from './api'
 
 // Custom Dropdown Component
 function CustomDropdown({ value, options, onChange, label }) {
@@ -115,9 +115,27 @@ function Checkout({ product, image, eventId, onBack, onBackToGallery, initialSiz
       try {
         const mapping = await fetchFrameMapping()
         setFrameMapping(mapping)
-        console.log('Frame mapping loaded:', mapping)
+        console.log('✅ Frame mapping loaded successfully')
+        console.log('📊 Total frames:', mapping?.data?.totalFrames)
+        console.log('📐 Organization:', mapping?.data?.organization)
+        console.log('🔧 Version:', mapping?.data?.version)
+        
+        // Test finding a frame with current selection
+        const testFrame = findFrame(
+          mapping,
+          orientation.toLowerCase(),
+          material.toLowerCase(),
+          frameType.toLowerCase(),
+          selectedColor.name.toLowerCase().replace(' metal', '').replace(' oak', ''),
+          selectedSize
+        )
+        if (testFrame) {
+          console.log('🖼️ Current frame found:', testFrame.path)
+        } else {
+          console.log('⚠️ No frame found for current selection')
+        }
       } catch (error) {
-        console.error('Failed to load frame mapping, using defaults:', error)
+        console.error('❌ Failed to load frame mapping, using defaults:', error)
         // Continue with hardcoded defaults if server request fails
       }
     }

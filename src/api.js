@@ -1,8 +1,8 @@
 const API_BASE_URL = 'https://imageseventsbackend-production.up.railway.app'
 
 /**
- * Fetch frame mapping configuration from the server
- * Returns frame types, materials, colors, and other configuration options
+ * Fetch frame overlay mapping from the server
+ * Returns frame overlay images with pixel coordinates for photo placement
  */
 export const fetchFrameMapping = async () => {
   try {
@@ -26,35 +26,82 @@ export const fetchFrameMapping = async () => {
 }
 
 /**
+ * Helper function to find a frame by parameters
+ * @param {Object} frameMapping - The frame mapping data from server
+ * @param {string} orientation - 'horizontal', 'vertical', or 'square'
+ * @param {string} material - 'metal' or 'oak'
+ * @param {string} quality - 'standard' or 'premium'
+ * @param {string} color - 'black', 'white', 'silver', 'gold', 'natural', 'beige'
+ * @param {string} size - e.g., '16x20', '8x10'
+ * @returns {Object|null} Frame data with coordinates, or null if not found
+ */
+export const findFrame = (frameMapping, orientation, material, quality, color, size) => {
+  if (!frameMapping?.data?.frames) return null
+  
+  const normalizedOrientation = orientation.toLowerCase()
+  const normalizedMaterial = material.toLowerCase()
+  const normalizedQuality = quality.toLowerCase()
+  const normalizedColor = color.toLowerCase()
+  
+  // Search for matching frame
+  // Pattern: orientation/material/quality/color/[O]-size-quality-material.png
+  // Example: horizontal/metal/premium/black/H-16x20-premium-metal.png
+  
+  for (const [framePath, frameData] of Object.entries(frameMapping.data.frames)) {
+    const pathParts = framePath.split('/')
+    if (pathParts.length === 5) {
+      const [pathOrientation, pathMaterial, pathQuality, pathColor, filename] = pathParts
+      
+      // Check if all parameters match
+      if (
+        pathOrientation === normalizedOrientation &&
+        pathMaterial === normalizedMaterial &&
+        pathQuality === normalizedQuality &&
+        pathColor === normalizedColor &&
+        filename.includes(size)
+      ) {
+        return {
+          ...frameData,
+          path: framePath,
+          filename: filename
+        }
+      }
+    }
+  }
+  
+  return null
+}
+
+/**
  * Expected response format:
  * {
- *   frameTypes: ['Standard', 'Premium'],
- *   materials: {
- *     Metal: {
- *       colors: [
- *         { name: 'Black Metal', value: '#1a1a1a', arteloName: 'BlackMetal' },
- *         { name: 'White Metal', value: '#FFFFFF', arteloName: 'WhiteMetal' },
- *         { name: 'Silver Metal', value: '#C0C0C0', arteloName: 'SilverMetal' },
- *         { name: 'Gold Metal', value: '#FFD700', arteloName: 'GoldMetal' }
- *       ]
+ *   success: true,
+ *   data: {
+ *     frames: {
+ *       "horizontal/metal/premium/black/H-16x20-premium-metal.png": {
+ *         topLeft: { x: 813, y: 627 },
+ *         bottomRight: { x: 2187, y: 2377 },
+ *         width: 1374,
+ *         height: 1750,
+ *         imageWidth: 3000,
+ *         imageHeight: 3000,
+ *         orientation: "horizontal"
+ *       },
+ *       // ... more frames
  *     },
- *     Oak: {
- *       colors: [
- *         { name: 'Natural Oak', value: '#DEB887', arteloName: 'NaturalOak' },
- *         { name: 'Black Oak', value: '#2C2416', arteloName: 'BlackOak' },
- *         { name: 'White Oak', value: '#F5F5DC', arteloName: 'WhiteOak' },
- *         { name: 'Beige Oak', value: '#D2B48C', arteloName: 'BeigeOak' }
- *       ]
+ *     totalFrames: 78,
+ *     organization: {
+ *       horizontal: 39,
+ *       vertical: 22,
+ *       square: 17
+ *     },
+ *     version: "2.0",
+ *     uploadedAt: "2025-11-15T...",
+ *     metadata: {
+ *       description: "Organized frame mappings by orientation",
+ *       structure: "orientation/material/quality/color/filename",
+ *       coordinateSystem: "pixels (x, y from top-left)"
  *     }
- *   },
- *   printTypes: ['Poster', 'Photo', 'Fine Art'],
- *   paperTypes: ['Matte', 'Glossy', 'Semi Gloss', 'Semi Matte Linen'],
- *   sizes: {
- *     Square: ['6x6', '8x8', '10x10', '12x12', '16x16', '18x18', '20x20', '24x24'],
- *     'Landscape 3:2': ['4x6', '8x12', '12x18', '16x24', '20x30', '24x36'],
- *     'Portrait 4:3': ['6x8', '9x12', '12x16', '18x24', '24x32'],
- *     'Landscape 5:4': ['8x10', '16x20', '24x30'],
- *     'Portrait 5:7': ['5x7', '8.5x11', '11x14', '11x17', '20x28']
  *   }
  * }
  */
