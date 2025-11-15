@@ -36,21 +36,10 @@ function Home() {
       try {
         console.log('🎨 Loading frame mapping...')
         const mapping = await fetchFrameMapping()
-        console.log('✅ Frame Mapping Response:', mapping)
-        console.log('📊 Total Frames:', mapping?.data?.totalFrames)
-        console.log('📐 Organization:', mapping?.data?.organization)
-        console.log('🔧 Version:', mapping?.data?.version)
-        console.log('📅 Uploaded At:', mapping?.data?.uploadedAt)
-        console.log('📋 Metadata:', mapping?.data?.metadata)
-        
-        // Log some example frames
-        if (mapping?.data?.frames) {
-          const frameKeys = Object.keys(mapping.data.frames)
-          console.log('🖼️ Sample frames:')
-          frameKeys.slice(0, 5).forEach(key => {
-            console.log(`  - ${key}`)
-          })
-        }
+        console.log('✅ COMPLETE FRAME MAPPING RESPONSE FROM BACKEND:')
+        console.log(JSON.stringify(mapping, null, 2))
+        console.log('---')
+        console.log('Raw object:', mapping)
       } catch (error) {
         console.error('❌ Failed to load frame mapping:', error)
       }
