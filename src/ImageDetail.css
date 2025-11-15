@@ -205,6 +205,8 @@
   aspect-ratio: 1 / 1 !important;
   background: #ffffff;
   overflow: visible !important;
+  perspective: 1000px; /* Enable 3D perspective for child elements */
+  transform-style: preserve-3d; /* Preserve 3D transforms */
 }
 
 .frame-preview-container .user-photo-preview {
@@ -212,6 +214,12 @@
   position: absolute !important;
   object-fit: cover !important;
   z-index: 2;
+  backface-visibility: hidden; /* Smooth rendering for 3D transforms */
+}
+
+/* 3D perspective transform for tilted frames */
+.frame-preview-container .user-photo-preview.perspective-3d {
+  will-change: transform; /* Optimize 3D rendering */
 }
 
 .frame-preview-container .frame-image-base {

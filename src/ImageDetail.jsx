@@ -6,6 +6,7 @@ import Footer from './Footer'
 import { useCart } from './CartContext'
 import { fetchFrameMapping } from './api'
 import { findBestFrameSizes } from './frameCompositor'
+import { calculatePerspectiveTransform, extractPoints, is3DFrame } from './perspectiveTransform'
 
 const API_BASE_URL = 'https://imageseventsbackend-production.up.railway.app'
 
@@ -46,15 +47,20 @@ function FramePreviewCard({ preview, product, onSelect, frameColors }) {
         <img 
           src={preview.userImage} 
           alt={`Your photo`}
-          className="user-photo-preview"
+          className={`user-photo-preview ${preview.is3D ? 'perspective-3d' : ''}`}
           style={{
             left: preview.coordinates.left,
             top: preview.coordinates.top,
             width: preview.coordinates.width,
-            height: preview.coordinates.height
+            height: preview.coordinates.height,
+            ...(preview.is3D && preview.perspectiveTransform ? {
+              transform: preview.perspectiveTransform,
+              transformOrigin: '0 0',
+              transformStyle: 'preserve-3d'
+            } : {})
           }}
           onLoad={() => {
-            console.log('✅ User photo loaded:', preview.size)
+            console.log(`✅ User photo loaded: ${preview.size}${preview.is3D ? ' (3D perspective)' : ''}`)
             setUserPhotoLoaded(true)
           }}
           onError={(e) => {
@@ -194,14 +200,64 @@ function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
         
         // Create simple preview data (no canvas compositing - use CSS overlays instead)
         const previews = bestMatches.map(match => {
-          // Calculate photo position within frame using coordinates
           const frameData = match.frameData
-          const photoX = frameData.topLeft.x
-          const photoY = frameData.topLeft.y
-          const photoWidth = frameData.width
-          const photoHeight = frameData.height
           const frameWidth = frameData.imageWidth
           const frameHeight = frameData.imageHeight
+          
+          // Check if this is a 3D perspective frame
+          if (is3DFrame(frameData)) {
+            console.log(`🎭 3D perspective frame detected: ${match.size}`)
+            const points = extractPoints(frameData)
+            
+            if (points) {
+              // Calculate bounding box for sizing
+              const allX = [points.topLeft.x, points.topRight.x, points.bottomRight.x, points.bottomLeft.x]
+              const allY = [points.topLeft.y, points.topRight.y, points.bottomRight.y, points.bottomLeft.y]
+              const minX = Math.min(...allX)
+              const minY = Math.min(...allY)
+              const maxX = Math.max(...allX)
+              const maxY = Math.max(...allY)
+              const photoWidth = maxX - minX
+              const photoHeight = maxY - minY
+              
+              // Calculate perspective transform
+              const perspectiveTransform = calculatePerspectiveTransform(
+                points,
+                frameWidth,
+                frameHeight,
+                photoWidth,
+                photoHeight
+              )
+              
+              // Calculate bounding box position
+              const left = (minX / frameWidth) * 100
+              const top = (minY / frameHeight) * 100
+              const width = (photoWidth / frameWidth) * 100
+              const height = (photoHeight / frameHeight) * 100
+              
+              return {
+                size: match.size,
+                userImage: image.src,
+                frameImageUrl: `https://gallery.images.events/frameImages/${match.framePath}`,
+                framePath: match.framePath,
+                score: match.score,
+                is3D: true,
+                perspectiveTransform,
+                coordinates: {
+                  left: `${left}%`,
+                  top: `${top}%`,
+                  width: `${width}%`,
+                  height: `${height}%`
+                }
+              }
+            }
+          }
+          
+          // Standard rectangular frame (2D)
+          const photoX = frameData.topLeft?.x || frameData.legacyTopLeft?.x || 0
+          const photoY = frameData.topLeft?.y || frameData.legacyTopLeft?.y || 0
+          const photoWidth = frameData.width
+          const photoHeight = frameData.height
           
           // Calculate percentages for CSS positioning
           const left = (photoX / frameWidth) * 100
@@ -215,6 +271,7 @@ function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
             frameImageUrl: `https://gallery.images.events/frameImages/${match.framePath}`,
             framePath: match.framePath,
             score: match.score,
+            is3D: false,
             coordinates: {
               left: `${left}%`,
               top: `${top}%`,
@@ -465,15 +522,15 @@ function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
               })}
             </div>
           ) : (
-            <div className="products-grid">
-              {frameProducts.map((product) => (
-                <div 
-                  key={product.id}
-                  className="product-card"
-                  onClick={() => setSelectedProduct(product)}
-                >
-                  <div className="product-image">
-                    <img src={product.preview} alt={product.name} />
+          <div className="products-grid">
+            {frameProducts.map((product) => (
+              <div 
+                key={product.id}
+                className="product-card"
+                onClick={() => setSelectedProduct(product)}
+              >
+                <div className="product-image">
+                  <img src={product.preview} alt={product.name} />
                     <div className="product-colors">
                       {frameColors.map((color) => (
                         <span
@@ -487,15 +544,15 @@ function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
                         ></span>
                       ))}
                     </div>
-                  </div>
-                  <div className="product-info">
-                    <h3 className="product-name">{product.name}</h3>
-                    <p className="product-price">${product.price}</p>
-                  </div>
-                  <button className="product-button">Select</button>
                 </div>
-              ))}
-            </div>
+                <div className="product-info">
+                  <h3 className="product-name">{product.name}</h3>
+                  <p className="product-price">${product.price}</p>
+                </div>
+                <button className="product-button">Select</button>
+              </div>
+            ))}
+          </div>
           )}
         </div>
       </div>
