@@ -101,8 +101,8 @@ export const findBestFrameSizes = (imageWidth, imageHeight, frameMapping, topN =
   
   console.log(`🔍 Looking for ${orientation} frames for ${imageWidth}x${imageHeight} image (ratio: ${(imageWidth/imageHeight).toFixed(2)})`)
   
-  // Score all frames with matching orientation
-  const scoredFrames = []
+  // Use Map to track best frame for each unique size (deduplication)
+  const sizeMap = new Map()
   
   for (const [framePath, frameData] of Object.entries(frames)) {
     // Calculate actual orientation from frame dimensions
@@ -128,23 +128,26 @@ export const findBestFrameSizes = (imageWidth, imageHeight, frameMapping, topN =
       
       console.log(`  📏 ${size}: actual ${frameData.width}x${frameData.height} (ratio ${frameRatio.toFixed(2)}) → score: ${score.toFixed(2)}`)
       
-      scoredFrames.push({
-        size,
-        score,
-        framePath,
-        frameData,
-        actualDimensions: `${frameData.width}x${frameData.height}`,
-        actualRatio: frameRatio
-      })
+      // Only keep the best-scoring frame for each unique size
+      if (!sizeMap.has(size) || sizeMap.get(size).score > score) {
+        sizeMap.set(size, {
+          size,
+          score,
+          framePath,
+          frameData,
+          actualDimensions: `${frameData.width}x${frameData.height}`,
+          actualRatio: frameRatio
+        })
+      }
     }
   }
   
-  // Sort by score and return top N
-  const topMatches = scoredFrames
+  // Convert Map to array, sort by score, and return top N unique sizes
+  const topMatches = Array.from(sizeMap.values())
     .sort((a, b) => a.score - b.score)
     .slice(0, topN)
   
-  console.log(`✅ Top ${topMatches.length} matches:`, topMatches.map(m => `${m.size} (${m.actualDimensions}, score: ${m.score.toFixed(2)})`).join(', '))
+  console.log(`✅ Top ${topMatches.length} unique sizes:`, topMatches.map(m => `${m.size} (${m.actualDimensions}, score: ${m.score.toFixed(2)})`).join(', '))
   
   return topMatches
 }
