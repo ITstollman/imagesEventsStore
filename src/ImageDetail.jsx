@@ -4,6 +4,8 @@ import Checkout from './Checkout'
 import Cart from './Cart'
 import Footer from './Footer'
 import { useCart } from './CartContext'
+import { fetchFrameMapping } from './api'
+import { generateFramePreviews } from './frameCompositor'
 
 const API_BASE_URL = 'https://imageseventsbackend-production.up.railway.app'
 
@@ -49,10 +51,58 @@ function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
   const [imageLoaded, setImageLoaded] = useState(false)
   const [downloading, setDownloading] = useState(false)
   const [downloaded, setDownloaded] = useState(false)
+  const [frameMapping, setFrameMapping] = useState(null)
+  const [framePreviews, setFramePreviews] = useState([])
+  const [loadingPreviews, setLoadingPreviews] = useState(true)
   const { getCartCount } = useCart()
 
   // Use API print options if available, otherwise use default products
   const frameProducts = printOptions && printOptions.length > 0 ? printOptions : defaultProducts
+
+  // Load frame mapping on mount
+  useEffect(() => {
+    const loadFrameMapping = async () => {
+      try {
+        const mapping = await fetchFrameMapping()
+        setFrameMapping(mapping)
+        console.log('✅ Frame mapping loaded for ImageDetail')
+      } catch (error) {
+        console.error('❌ Failed to load frame mapping:', error)
+      }
+    }
+    
+    loadFrameMapping()
+  }, [])
+
+  // Generate frame previews when image or mapping changes
+  useEffect(() => {
+    const generatePreviews = async () => {
+      if (!frameMapping || !image.src) {
+        setLoadingPreviews(false)
+        return
+      }
+      
+      try {
+        setLoadingPreviews(true)
+        console.log('🎨 Generating frame previews for image:', image.id)
+        
+        const previews = await generateFramePreviews(
+          image.src,
+          frameMapping,
+          '/organized-frames' // Base URL for frame images in public folder
+        )
+        
+        setFramePreviews(previews)
+        console.log('✅ Generated', previews.length, 'frame previews')
+      } catch (error) {
+        console.error('❌ Failed to generate frame previews:', error)
+      } finally {
+        setLoadingPreviews(false)
+      }
+    }
+    
+    generatePreviews()
+  }, [frameMapping, image.src, image.id])
 
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -202,39 +252,101 @@ function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
 
         <div className="products-section">
           <h2 className="products-title">Order Prints</h2>
-          <p className="products-subtitle">Choose your favorite frame style</p>
+          <p className="products-subtitle">Choose your perfect size</p>
           
-          <div className="products-grid">
-            {frameProducts.map((product) => (
-              <div 
-                key={product.id}
-                className="product-card"
-                onClick={() => setSelectedProduct(product)}
-              >
-                <div className="product-image">
-                  <img src={product.preview} alt={product.name} />
-                  <div className="product-colors">
-                    {frameColors.map((color) => (
-                      <span
-                        key={color.name}
-                        className="product-color-circle"
-                        style={{
-                          backgroundColor: color.value,
-                          border: color.value === '#FFFFFF' ? '1px solid #d0d0d0' : 'none'
-                        }}
-                        title={color.name}
-                      ></span>
-                    ))}
+          {loadingPreviews ? (
+            <div className="products-grid">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="product-card loading">
+                  <div className="product-image skeleton">
+                    <div className="skeleton-shimmer"></div>
+                  </div>
+                  <div className="product-info">
+                    <div className="skeleton-text"></div>
+                    <div className="skeleton-text short"></div>
                   </div>
                 </div>
-                <div className="product-info">
-                  <h3 className="product-name">{product.name}</h3>
-                  <p className="product-price">${product.price}</p>
+              ))}
+            </div>
+          ) : framePreviews.length > 0 ? (
+            <div className="products-grid">
+              {framePreviews.map((preview, index) => {
+                const product = {
+                  id: index + 1,
+                  name: `${preview.size}" Framed Print`,
+                  price: 49.99, // Base price, will be calculated properly in checkout
+                  preview: preview.compositedImage,
+                  size: preview.size
+                }
+                
+                return (
+                  <div 
+                    key={preview.size}
+                    className="product-card"
+                    onClick={() => setSelectedProduct(product)}
+                  >
+                    <div className="product-image">
+                      <img 
+                        src={preview.compositedImage} 
+                        alt={`${preview.size} frame`}
+                        crossOrigin="anonymous"
+                      />
+                      <div className="product-colors">
+                        {frameColors.map((color) => (
+                          <span
+                            key={color.name}
+                            className="product-color-circle"
+                            style={{
+                              backgroundColor: color.value,
+                              border: color.value === '#FFFFFF' ? '1px solid #d0d0d0' : 'none'
+                            }}
+                            title={color.name}
+                          ></span>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="product-info">
+                      <h3 className="product-name">{preview.size}"</h3>
+                      <p className="product-price">From $49.99</p>
+                    </div>
+                    <button className="product-button">Select</button>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="products-grid">
+              {frameProducts.map((product) => (
+                <div 
+                  key={product.id}
+                  className="product-card"
+                  onClick={() => setSelectedProduct(product)}
+                >
+                  <div className="product-image">
+                    <img src={product.preview} alt={product.name} />
+                    <div className="product-colors">
+                      {frameColors.map((color) => (
+                        <span
+                          key={color.name}
+                          className="product-color-circle"
+                          style={{
+                            backgroundColor: color.value,
+                            border: color.value === '#FFFFFF' ? '1px solid #d0d0d0' : 'none'
+                          }}
+                          title={color.name}
+                        ></span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="product-info">
+                    <h3 className="product-name">{product.name}</h3>
+                    <p className="product-price">${product.price}</p>
+                  </div>
+                  <button className="product-button">Select</button>
                 </div>
-                <button className="product-button">Select</button>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
       <Footer />

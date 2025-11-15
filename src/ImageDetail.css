@@ -132,6 +132,72 @@
   display: none;
 }
 
+/* Product card skeleton loading */
+.product-card.loading {
+  pointer-events: none;
+}
+
+.product-image.skeleton {
+  position: relative;
+  background: #f0f0f0;
+  aspect-ratio: 1;
+  overflow: hidden;
+}
+
+.product-image.skeleton .skeleton-shimmer {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.6) 50%,
+    transparent 100%
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+.skeleton-text {
+  height: 16px;
+  background: #f0f0f0;
+  border-radius: 4px;
+  margin: 8px 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton-text.short {
+  width: 60%;
+  height: 14px;
+}
+
+.skeleton-text::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.6) 50%,
+    transparent 100%
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
 .download-button {
   display: inline-flex;
   align-items: center;
