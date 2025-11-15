@@ -128,7 +128,7 @@ export const compositeImageIntoFrame = async (
   userImageUrl,
   framePath,
   frameData,
-  frameBaseUrl = '/organized-frames'
+  frameBaseUrl = '/frameImages'
 ) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -140,12 +140,14 @@ export const compositeImageIntoFrame = async (
       canvas.height = frameData.imageHeight
       
       // Fetch user image through a proxy to avoid CORS issues
+      console.log('📥 Fetching user image:', userImageUrl.substring(0, 80) + '...')
       const userImageBlob = await fetch(userImageUrl)
         .then(res => {
-          if (!res.ok) throw new Error('Failed to fetch user image')
+          if (!res.ok) throw new Error(`Failed to fetch user image: ${res.status} ${res.statusText}`)
           return res.blob()
         })
       const userImageBlobUrl = URL.createObjectURL(userImageBlob)
+      console.log('✅ User image fetched successfully')
       
       const userImage = new Image()
       const frameImage = new Image()
@@ -217,8 +219,11 @@ export const compositeImageIntoFrame = async (
       }
       
       // Load images
+      const frameImageUrl = `${frameBaseUrl}/${framePath}`
+      console.log('🖼️ Loading frame from:', frameImageUrl)
+      
       userImage.src = userImageBlobUrl
-      frameImage.src = `${frameBaseUrl}/${framePath}`
+      frameImage.src = frameImageUrl
     } catch (error) {
       reject(error)
     }
@@ -231,7 +236,7 @@ export const compositeImageIntoFrame = async (
 export const generateFramePreviews = async (
   userImageUrl,
   frameMapping,
-  frameBaseUrl = '/organized-frames',
+  frameBaseUrl = '/frameImages',
   imageDimensions = null
 ) => {
   try {

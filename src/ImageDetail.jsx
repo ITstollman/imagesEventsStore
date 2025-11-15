@@ -89,7 +89,7 @@ function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
         const previews = await generateFramePreviews(
           image.src,
           frameMapping,
-          '/organized-frames', // Base URL for frame images in public folder
+          '/frameImages', // Base URL for frame images
           image.dimensions // Pass existing dimensions if available
         )
         
