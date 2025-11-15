@@ -48,20 +48,22 @@ function FramePreviewCard({ preview, product, onSelect, frameColors }) {
           alt={`Your photo`}
           className="user-photo-preview"
           style={{
-            // Use bounding box for positioning
+            // Position the bounding box
             left: preview.overlayData.mode === '3d' 
               ? preview.overlayData.boundingBox.left 
               : preview.overlayData.rect.left,
             top: preview.overlayData.mode === '3d' 
               ? preview.overlayData.boundingBox.top 
               : preview.overlayData.rect.top,
+            // For 3D mode: set dimensions of bounding box, image will fill it
+            // For rect mode: set dimensions directly
             width: preview.overlayData.mode === '3d' 
               ? preview.overlayData.boundingBox.width 
               : preview.overlayData.rect.width,
             height: preview.overlayData.mode === '3d' 
               ? preview.overlayData.boundingBox.height 
               : preview.overlayData.rect.height,
-            // Apply 3D transform if available
+            // Apply 3D transform if available (will warp the filled image)
             transform: preview.overlayData.mode === '3d' 
               ? preview.overlayData.transform 
               : 'none',
