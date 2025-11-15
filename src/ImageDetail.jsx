@@ -19,6 +19,84 @@ const frameColors = [
 
 // Frame preview card with loading state
 function FramePreviewCard({ preview, product, onSelect, frameColors }) {
+  // DEBUGGER TEST MODE - exact same approach as the working debugger
+  if (preview.mode === 'debugger-test') {
+    const [userImageLoaded, setUserImageLoaded] = useState(false)
+    const [frameImageLoaded, setFrameImageLoaded] = useState(false)
+    const bothLoaded = userImageLoaded && frameImageLoaded
+    
+    return (
+      <div 
+        className="product-card"
+        onClick={bothLoaded ? onSelect : undefined}
+        style={{ cursor: bothLoaded ? 'pointer' : 'default' }}
+      >
+        {!bothLoaded && (
+          <div className="product-image skeleton">
+            <div className="skeleton-shimmer"></div>
+          </div>
+        )}
+        
+        <div 
+          className="product-image"
+          style={{ 
+            display: bothLoaded ? 'block' : 'none',
+            position: 'relative',
+            width: '100%',
+            aspectRatio: '1 / 1',
+            background: '#ffffff',
+            overflow: 'visible'
+          }}
+        >
+          {/* RAW user image - NO clipping, NO canvas */}
+          <img 
+            src={preview.userImage} 
+            alt={`Your photo`}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              zIndex: 2
+            }}
+            onLoad={() => {
+              console.log('🧪 TEST: User image loaded')
+              setUserImageLoaded(true)
+            }}
+          />
+          {/* Frame overlay */}
+          <img 
+            src={preview.frameImageUrl}
+            alt={`Frame`}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              zIndex: 3
+            }}
+            onLoad={() => {
+              console.log('🧪 TEST: Frame loaded')
+              setFrameImageLoaded(true)
+            }}
+          />
+        </div>
+        
+        <div className="product-info">
+          <h3 className="product-name">{preview.size}" 🧪</h3>
+          <p className="product-price">TEST (Debugger Style)</p>
+        </div>
+        <button className="product-button" disabled={!bothLoaded}>
+          {bothLoaded ? 'Select' : 'Loading...'}
+        </button>
+      </div>
+    )
+  }
+  
   // For clipped-layered mode (separate clipped photo + frame, like debugger)
   if (preview.mode === 'clipped-layered') {
     const [clippedPhotoLoaded, setClippedPhotoLoaded] = useState(false)
@@ -354,6 +432,18 @@ function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
         })
         
         const previews = await Promise.all(previewPromises)
+        
+        // ADD TEST PREVIEW using debugger's exact approach
+        if (bestMatches.length > 0 && bestMatches[0].frameData?.points?.length === 4) {
+          const testMatch = bestMatches[0]
+          previews.unshift({
+            size: `${testMatch.size} TEST`,
+            mode: 'debugger-test',
+            userImage: image.src,
+            frameImageUrl: `https://gallery.images.events/frameImages/${testMatch.framePath}`,
+            frameData: testMatch.frameData
+          })
+        }
         
         setFramePreviews(previews)
         console.log('✅ Generated', previews.length, 'frame previews')
