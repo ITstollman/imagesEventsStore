@@ -139,7 +139,7 @@ export const compositeImageIntoFrame = async (
       canvas.width = frameData.imageWidth
       canvas.height = frameData.imageHeight
       
-      // Fetch user image through a proxy to avoid CORS issues
+      // Fetch user image as blob to avoid CORS issues
       console.log('📥 Fetching user image:', userImageUrl.substring(0, 80) + '...')
       const userImageBlob = await fetch(userImageUrl)
         .then(res => {
@@ -148,6 +148,17 @@ export const compositeImageIntoFrame = async (
         })
       const userImageBlobUrl = URL.createObjectURL(userImageBlob)
       console.log('✅ User image fetched successfully')
+      
+      // Fetch frame image as blob to avoid CORS issues
+      const frameImageUrl = `${frameBaseUrl}/${framePath}`
+      console.log('🖼️ Fetching frame from:', frameImageUrl)
+      const frameImageBlob = await fetch(frameImageUrl)
+        .then(res => {
+          if (!res.ok) throw new Error(`Failed to fetch frame image: ${res.status} ${res.statusText}`)
+          return res.blob()
+        })
+      const frameImageBlobUrl = URL.createObjectURL(frameImageBlob)
+      console.log('✅ Frame image fetched successfully')
       
       const userImage = new Image()
       const frameImage = new Image()
@@ -188,13 +199,15 @@ export const compositeImageIntoFrame = async (
           // Draw frame overlay on top
           ctx.drawImage(frameImage, 0, 0, frameData.imageWidth, frameData.imageHeight)
           
-          // Clean up blob URL
+          // Clean up blob URLs
           URL.revokeObjectURL(userImageBlobUrl)
+          URL.revokeObjectURL(frameImageBlobUrl)
           
           // Convert to data URL
           resolve(canvas.toDataURL('image/png', 0.9))
         } catch (error) {
           URL.revokeObjectURL(userImageBlobUrl)
+          URL.revokeObjectURL(frameImageBlobUrl)
           reject(error)
         }
       }
@@ -211,19 +224,18 @@ export const compositeImageIntoFrame = async (
       
       userImage.onerror = () => {
         URL.revokeObjectURL(userImageBlobUrl)
+        URL.revokeObjectURL(frameImageBlobUrl)
         reject(new Error('Failed to load user image'))
       }
       frameImage.onerror = () => {
         URL.revokeObjectURL(userImageBlobUrl)
+        URL.revokeObjectURL(frameImageBlobUrl)
         reject(new Error('Failed to load frame image'))
       }
       
-      // Load images
-      const frameImageUrl = `${frameBaseUrl}/${framePath}`
-      console.log('🖼️ Loading frame from:', frameImageUrl)
-      
+      // Load images from blob URLs
       userImage.src = userImageBlobUrl
-      frameImage.src = frameImageUrl
+      frameImage.src = frameImageBlobUrl
     } catch (error) {
       reject(error)
     }
