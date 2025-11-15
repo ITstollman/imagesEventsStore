@@ -316,25 +316,13 @@ export const buildFrameOverlayData = (frameData) => {
  * @param {Object} frameData - Frame data with points array
  * @returns {Promise<string>} - Data URL of the composited image
  */
-const fetchImageToElement = async (imageUrl) => {
-  const response = await fetch(imageUrl, { mode: 'cors' })
-  if (!response.ok) {
-    throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`)
-  }
-
-  const blob = await response.blob()
+const loadImageWithCrossOrigin = (imageUrl) => {
   return new Promise((resolve, reject) => {
-    const objectUrl = URL.createObjectURL(blob)
     const img = new Image()
-    img.onload = () => {
-      URL.revokeObjectURL(objectUrl)
-      resolve(img)
-    }
-    img.onerror = () => {
-      URL.revokeObjectURL(objectUrl)
-      reject(new Error('Failed to load image element'))
-    }
-    img.src = objectUrl
+    img.crossOrigin = 'anonymous'
+    img.onload = () => resolve(img)
+    img.onerror = () => reject(new Error(`Failed to load image: ${imageUrl}`))
+    img.src = imageUrl
   })
 }
 
@@ -350,8 +338,8 @@ export const compositeWithCanvasClipping = async (userImageUrl, frameImageUrl, f
 
   try {
     const [userImg, frameImg] = await Promise.all([
-      fetchImageToElement(userImageUrl),
-      fetchImageToElement(frameImageUrl)
+      loadImageWithCrossOrigin(userImageUrl),
+      loadImageWithCrossOrigin(frameImageUrl)
     ])
 
     // Clear canvas
