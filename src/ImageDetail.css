@@ -198,6 +198,29 @@
   }
 }
 
+/* Frame preview with CSS overlay */
+.frame-preview-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.user-photo-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.frame-overlay-preview {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  z-index: 1;
+}
+
 .download-button {
   display: inline-flex;
   align-items: center;

@@ -5,7 +5,7 @@ import Cart from './Cart'
 import Footer from './Footer'
 import { useCart } from './CartContext'
 import { fetchFrameMapping } from './api'
-import { generateFramePreviews } from './frameCompositor'
+import { findBestFrameSizes } from './frameCompositor'
 
 const API_BASE_URL = 'https://imageseventsbackend-production.up.railway.app'
 
@@ -76,38 +76,48 @@ function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
 
   // Generate frame previews when image or mapping changes
   useEffect(() => {
-    const generatePreviews = async () => {
-      if (!frameMapping || !image.src) {
+    const generateSimplePreviews = () => {
+      if (!frameMapping || !image.src || !image.dimensions) {
         setLoadingPreviews(false)
         return
       }
       
       try {
         setLoadingPreviews(true)
-        console.log('🎨 Generating frame previews for image:', image.id)
+        console.log('🎨 Generating simple frame previews for image:', image.id)
+        console.log('📐 Image dimensions:', image.dimensions.width, 'x', image.dimensions.height)
         
-        // Use production base URL for frame images
-        const frameBaseUrl = 'https://gallery.images.events/frameImages'
-        
-        const previews = await generateFramePreviews(
-          image.src,
+        // Find best matching frame sizes
+        const bestMatches = findBestFrameSizes(
+          image.dimensions.width,
+          image.dimensions.height,
           frameMapping,
-          frameBaseUrl, // Use full production URL
-          image.dimensions // Pass existing dimensions if available
+          4
         )
         
+        console.log('🎯 Best matching frames:', bestMatches.map(m => m.size).join(', '))
+        
+        // Create simple preview data (no canvas compositing - use CSS overlays instead)
+        const previews = bestMatches.map(match => ({
+          size: match.size,
+          userImage: image.src, // User's actual photo
+          frameImageUrl: `https://gallery.images.events/frameImages/${match.framePath}`,
+          framePath: match.framePath,
+          score: match.score
+        }))
+        
         setFramePreviews(previews)
-        console.log('✅ Generated', previews.length, 'frame previews')
-        console.log('📸 Frame preview URLs:', previews.map(p => p.frameImageUrl))
+        console.log('✅ Generated', previews.length, 'frame previews (CSS-based)')
       } catch (error) {
         console.error('❌ Failed to generate frame previews:', error)
+        setFramePreviews([])
       } finally {
         setLoadingPreviews(false)
       }
     }
     
-    generatePreviews()
-  }, [frameMapping, image.src, image.id])
+    generateSimplePreviews()
+  }, [frameMapping, image.src, image.id, image.dimensions])
 
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -280,7 +290,7 @@ function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
                   id: index + 1,
                   name: `${preview.size}" Framed Print`,
                   price: 49.99, // Base price, will be calculated properly in checkout
-                  preview: preview.compositedImage,
+                  preview: preview.userImage,
                   size: preview.size
                 }
                 
@@ -290,10 +300,16 @@ function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
                     className="product-card"
                     onClick={() => setSelectedProduct(product)}
                   >
-                    <div className="product-image">
+                    <div className="product-image frame-preview-container">
                       <img 
-                        src={preview.compositedImage} 
-                        alt={`${preview.size} frame`}
+                        src={preview.userImage} 
+                        alt={`Your photo`}
+                        className="user-photo-preview"
+                      />
+                      <img 
+                        src={preview.frameImageUrl}
+                        alt={`${preview.size} frame overlay`}
+                        className="frame-overlay-preview"
                       />
                       <div className="product-colors">
                         {frameColors.map((color) => (
