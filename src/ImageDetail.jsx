@@ -44,7 +44,7 @@ function FramePreviewCard({ preview, product, onSelect, frameColors }) {
       >
         {/* User's photo positioned behind the frame */}
         {preview.overlayData.mode === '3d' ? (
-          // 3D mode: Use wrapper div for bounding box, image fills it 100%
+          // 3D mode: Apply transform to wrapper, image scales to fill and overflow
           <div
             className="user-photo-wrapper"
             style={{
@@ -54,7 +54,10 @@ function FramePreviewCard({ preview, product, onSelect, frameColors }) {
               width: preview.overlayData.boundingBox.width,
               height: preview.overlayData.boundingBox.height,
               overflow: 'hidden',
-              zIndex: 2
+              zIndex: 2,
+              transform: preview.overlayData.transform,
+              transformOrigin: '0 0',
+              transformStyle: 'preserve-3d'
             }}
           >
             <img 
@@ -62,12 +65,13 @@ function FramePreviewCard({ preview, product, onSelect, frameColors }) {
               alt={`Your photo`}
               className="user-photo-preview"
               style={{
-                width: '100%',
-                height: '100%',
+                // Make image larger than container so it fills after transform
+                width: '120%',
+                height: '120%',
                 objectFit: 'cover',
-                transform: preview.overlayData.transform,
-                transformOrigin: '0 0',
-                transformStyle: 'preserve-3d'
+                position: 'absolute',
+                left: '-10%',
+                top: '-10%'
               }}
               onLoad={() => {
                 console.log(`✅ User photo loaded: ${preview.size} (3d mode)`)
