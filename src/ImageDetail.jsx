@@ -43,41 +43,64 @@ function FramePreviewCard({ preview, product, onSelect, frameColors }) {
         style={{ display: bothLoaded ? 'block' : 'none' }}
       >
         {/* User's photo positioned behind the frame */}
-        <img 
-          src={preview.userImage} 
-          alt={`Your photo`}
-          className="user-photo-preview"
-          style={{
-            // Position the bounding box
-            left: preview.overlayData.mode === '3d' 
-              ? preview.overlayData.boundingBox.left 
-              : preview.overlayData.rect.left,
-            top: preview.overlayData.mode === '3d' 
-              ? preview.overlayData.boundingBox.top 
-              : preview.overlayData.rect.top,
-            // For 3D mode: set dimensions of bounding box, image will fill it
-            // For rect mode: set dimensions directly
-            width: preview.overlayData.mode === '3d' 
-              ? preview.overlayData.boundingBox.width 
-              : preview.overlayData.rect.width,
-            height: preview.overlayData.mode === '3d' 
-              ? preview.overlayData.boundingBox.height 
-              : preview.overlayData.rect.height,
-            // Apply 3D transform if available (will warp the filled image)
-            transform: preview.overlayData.mode === '3d' 
-              ? preview.overlayData.transform 
-              : 'none',
-            transformOrigin: '0 0'
-          }}
-          onLoad={() => {
-            console.log(`✅ User photo loaded: ${preview.size} (${preview.overlayData.mode} mode)`)
-            setUserPhotoLoaded(true)
-          }}
-          onError={(e) => {
-            console.error('❌ User photo failed:', preview.size, e)
-            setUserPhotoLoaded(true) // Show anyway to prevent infinite loading
-          }}
-        />
+        {preview.overlayData.mode === '3d' ? (
+          // 3D mode: Use wrapper div for bounding box, image fills it 100%
+          <div
+            className="user-photo-wrapper"
+            style={{
+              position: 'absolute',
+              left: preview.overlayData.boundingBox.left,
+              top: preview.overlayData.boundingBox.top,
+              width: preview.overlayData.boundingBox.width,
+              height: preview.overlayData.boundingBox.height,
+              overflow: 'hidden',
+              zIndex: 2
+            }}
+          >
+            <img 
+              src={preview.userImage} 
+              alt={`Your photo`}
+              className="user-photo-preview"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                transform: preview.overlayData.transform,
+                transformOrigin: '0 0',
+                transformStyle: 'preserve-3d'
+              }}
+              onLoad={() => {
+                console.log(`✅ User photo loaded: ${preview.size} (3d mode)`)
+                setUserPhotoLoaded(true)
+              }}
+              onError={(e) => {
+                console.error('❌ User photo failed:', preview.size, e)
+                setUserPhotoLoaded(true)
+              }}
+            />
+          </div>
+        ) : (
+          // Rect mode: Simple positioned image
+          <img 
+            src={preview.userImage} 
+            alt={`Your photo`}
+            className="user-photo-preview"
+            style={{
+              left: preview.overlayData.rect.left,
+              top: preview.overlayData.rect.top,
+              width: preview.overlayData.rect.width,
+              height: preview.overlayData.rect.height
+            }}
+            onLoad={() => {
+              console.log(`✅ User photo loaded: ${preview.size} (rect mode)`)
+              setUserPhotoLoaded(true)
+            }}
+            onError={(e) => {
+              console.error('❌ User photo failed:', preview.size, e)
+              setUserPhotoLoaded(true)
+            }}
+          />
+        )}
         {/* Frame overlay on top */}
         <img 
           src={preview.frameImageUrl}
