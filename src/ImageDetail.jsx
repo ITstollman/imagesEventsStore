@@ -131,7 +131,12 @@ function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
         
         setFramePreviews(previews)
         console.log('✅ Generated', previews.length, 'frame previews (CSS-based)')
-        console.log('📍 Sample coordinates:', previews[0]?.coordinates)
+        console.log('📍 Sample preview:', {
+          size: previews[0]?.size,
+          coordinates: previews[0]?.coordinates,
+          userImage: previews[0]?.userImage?.substring(0, 80),
+          frameImageUrl: previews[0]?.frameImageUrl
+        })
       } catch (error) {
         console.error('❌ Failed to generate frame previews:', error)
         setFramePreviews([])
@@ -336,12 +341,16 @@ function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
                           width: preview.coordinates.width,
                           height: preview.coordinates.height
                         }}
+                        onLoad={() => console.log('✅ User photo loaded:', preview.size)}
+                        onError={(e) => console.error('❌ User photo failed:', preview.size, e)}
                       />
                       {/* Frame overlay on top */}
                       <img 
                         src={preview.frameImageUrl}
                         alt={`${preview.size} frame`}
                         className="frame-image-base"
+                        onLoad={() => console.log('✅ Frame loaded:', preview.frameImageUrl.substring(0, 80))}
+                        onError={(e) => console.error('❌ Frame failed:', preview.frameImageUrl)}
                       />
                       <div className="product-colors">
                         {frameColors.map((color) => (
