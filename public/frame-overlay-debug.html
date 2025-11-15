@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Frame Overlay Debugger</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+
+      body {
+        margin: 0;
+        padding: 32px;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+          sans-serif;
+        background: #f4f6fb;
+        color: #1f2933;
+      }
+
+      h1 {
+        margin: 0 0 16px;
+        font-size: 24px;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 420px minmax(360px, 1fr);
+        gap: 24px;
+        align-items: start;
+      }
+
+      .card {
+        background: white;
+        border-radius: 14px;
+        padding: 20px;
+        box-shadow: 0 12px 30px rgba(15, 28, 48, 0.12);
+      }
+
+      .card h2 {
+        margin: 0 0 12px;
+        font-size: 18px;
+      }
+
+      .controls label {
+        display: block;
+        font-size: 12px;
+        letter-spacing: 0.04em;
+        color: #7b8794;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+      }
+
+      .controls input,
+      .controls textarea {
+        width: 100%;
+        border: 1px solid #d4dbea;
+        border-radius: 10px;
+        padding: 10px 12px;
+        font-family: 'JetBrains Mono', Menlo, Monaco, monospace;
+        font-size: 13px;
+        background: #fdfdfd;
+        color: inherit;
+        box-sizing: border-box;
+      }
+
+      .controls textarea {
+        min-height: 260px;
+        resize: vertical;
+      }
+
+      .controls button {
+        width: 100%;
+        border: none;
+        border-radius: 10px;
+        padding: 12px 16px;
+        font-size: 14px;
+        margin-top: 12px;
+        cursor: pointer;
+        background: linear-gradient(120deg, #4338ca, #6366f1);
+        color: white;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+      }
+
+      .preview-frame {
+        position: relative;
+        width: 100%;
+        max-width: 520px;
+        aspect-ratio: 1 / 1;
+        margin: 0 auto;
+        background: repeating-linear-gradient(
+          45deg,
+          #f4f6fb,
+          #f4f6fb 16px,
+          #e1e7f5 16px,
+          #e1e7f5 32px
+        );
+        border-radius: 12px;
+        border: 1px solid #d4dbea;
+        overflow: visible;
+      }
+
+      .preview-frame img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        pointer-events: none;
+      }
+
+      .preview-frame .user-photo {
+        object-fit: cover;
+        transform-origin: 0 0;
+        z-index: 10;
+        box-shadow: 0 8px 20px rgba(15, 28, 48, 0.18);
+      }
+
+      .preview-frame .frame-overlay {
+        z-index: 5;
+      }
+
+      .preview-frame .bbox {
+        position: absolute;
+        border: 2px dashed rgba(99, 102, 241, 0.5);
+        border-radius: 6px;
+        pointer-events: none;
+        z-index: 4;
+      }
+
+      .info {
+        margin-top: 18px;
+        border-radius: 10px;
+        background: #0b1220;
+        color: #f7fafc;
+        padding: 14px;
+        font-family: 'JetBrains Mono', Menlo, Monaco, monospace;
+        font-size: 12px;
+        white-space: pre-wrap;
+        max-height: 260px;
+        overflow: auto;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #4338ca;
+        background: rgba(99, 102, 241, 0.1);
+        padding: 6px 10px;
+        border-radius: 999px;
+        margin-bottom: 12px;
+      }
+
+      .warning {
+        background: rgba(244, 63, 94, 0.08);
+        color: #f43f5e;
+      }
+
+      @media (max-width: 980px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🖼️ Frame Overlay Debugger</h1>
+    <p class="badge" id="statusBadge">Waiting for render…</p>
+
+    <div class="layout">
+      <div class="card">
+        <h2>Frame Data</h2>
+        <div class="controls">
+          <label for="frameImageInput">Frame image URL</label>
+          <input
+            id="frameImageInput"
+            type="text"
+            spellcheck="false"
+            value="https://gallery.images.events/frameImages/horizontal/metal/premium/black/8x8-premium-metal.png"
+          />
+
+          <label for="userImageInput">User image URL</label>
+          <input
+            id="userImageInput"
+            type="text"
+            spellcheck="false"
+            value="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=800&auto=format&fit=crop"
+          />
+
+          <label for="frameDataInput">Frame mapping JSON</label>
+          <textarea id="frameDataInput" spellcheck="false"></textarea>
+
+          <button id="renderBtn" type="button">Render Preview</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Preview</h2>
+        <div class="preview-frame" id="previewFrame">
+          <img class="user-photo" id="userPhoto" alt="User" />
+          <img class="frame-overlay" id="frameOverlay" alt="Frame overlay" />
+          <div class="bbox" id="bbox"></div>
+        </div>
+        <div class="info" id="infoBox">// Overlay info will appear here</div>
+      </div>
+    </div>
+
+    <script>
+      const frameDataInput = document.getElementById('frameDataInput')
+      const frameImageInput = document.getElementById('frameImageInput')
+      const userImageInput = document.getElementById('userImageInput')
+      const renderBtn = document.getElementById('renderBtn')
+      const infoBox = document.getElementById('infoBox')
+      const statusBadge = document.getElementById('statusBadge')
+      const userPhoto = document.getElementById('userPhoto')
+      const frameOverlay = document.getElementById('frameOverlay')
+      const bbox = document.getElementById('bbox')
+
+      const defaultFrameData = {
+        topLeft: { x: 1097, y: 1083 },
+        bottomRight: { x: 2062, y: 1958 },
+        width: 965,
+        height: 875,
+        imageWidth: 3000,
+        imageHeight: 3000,
+        orientation: 'horizontal',
+        timestamp: '2025-11-15T09:25:30.246Z',
+        points: [
+          { x: 1112, y: 1114, label: 'topLeft' },
+          { x: 1929, y: 1063, label: 'topRight' },
+          { x: 2023, y: 1930, label: 'bottomRight' },
+          { x: 1196, y: 2011, label: 'bottomLeft' }
+        ],
+        legacyTopLeft: { x: 1097, y: 1083 },
+        legacyBottomRight: { x: 2062, y: 1958 }
+      }
+
+      frameDataInput.value = JSON.stringify(defaultFrameData, null, 2)
+
+      const REQUIRED_POINT_LABELS = ['topLeft', 'topRight', 'bottomRight', 'bottomLeft']
+
+      const formatPercent = (value, total) => {
+        if (!Number.isFinite(value) || !Number.isFinite(total) || total === 0) return '0%'
+        return `${((value / total) * 100).toFixed(4)}%`
+      }
+
+      const orderFramePoints = (frameData) => {
+        if (!frameData?.points || frameData.points.length < 4) return null
+        const labeled = {}
+        frameData.points.forEach(point => {
+          if (point?.label) labeled[point.label] = point
+        })
+        const ordered = REQUIRED_POINT_LABELS.map(label => labeled[label] || null)
+        return ordered.every(Boolean) ? ordered : null
+      }
+
+      const getBoundingBox = (points) => {
+        const xs = points.map(p => p.x)
+        const ys = points.map(p => p.y)
+        return {
+          minX: Math.min(...xs),
+          minY: Math.min(...ys),
+          maxX: Math.max(...xs),
+          maxY: Math.max(...ys)
+        }
+      }
+
+      const adj = (m) => ([
+        m[4] * m[8] - m[5] * m[7], m[2] * m[7] - m[1] * m[8], m[1] * m[5] - m[2] * m[4],
+        m[5] * m[6] - m[3] * m[8], m[0] * m[8] - m[2] * m[6], m[2] * m[3] - m[0] * m[5],
+        m[3] * m[7] - m[4] * m[6], m[1] * m[6] - m[0] * m[7], m[0] * m[4] - m[1] * m[3]
+      ])
+
+      const multmm = (a, b) => {
+        const c = Array(9).fill(0)
+        for (let i = 0; i < 3; i++) {
+          for (let j = 0; j < 3; j++) {
+            let cij = 0
+            for (let k = 0; k < 3; k++) {
+              cij += a[3 * i + k] * b[3 * k + j]
+            }
+            c[3 * i + j] = cij
+          }
+        }
+        return c
+      }
+
+      const multmv = (m, v) => ([
+        m[0] * v[0] + m[1] * v[1] + m[2] * v[2],
+        m[3] * v[0] + m[4] * v[1] + m[5] * v[2],
+        m[6] * v[0] + m[7] * v[1] + m[8] * v[2]
+      ])
+
+      const basisToPoints = (x1, y1, x2, y2, x3, y3, x4, y4) => {
+        const m = [x1, x2, x3, y1, y2, y3, 1, 1, 1]
+        const v = multmv(adj(m), [x4, y4, 1])
+        return multmm(m, [v[0], 0, 0, 0, v[1], 0, 0, 0, v[2]])
+      }
+
+      const general2DProjection = (...args) => {
+        const s = basisToPoints(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7])
+        const d = basisToPoints(args[8], args[9], args[10], args[11], args[12], args[13], args[14], args[15])
+        return multmm(d, adj(s))
+      }
+
+      const normalizeMatrix = (matrix) => {
+        const scale = matrix[8] === 0 ? 1 : matrix[8]
+        return matrix.map(value => value / scale)
+      }
+
+      const formatMatrixNumber = (value) => {
+        if (!Number.isFinite(value)) return 0
+        return Number(value.toFixed(6))
+      }
+
+      const matrixToCSS = (matrix) => {
+        const normalized = normalizeMatrix(matrix)
+        const formatted = normalized.map(formatMatrixNumber)
+        return `matrix3d(${formatted[0]}, ${formatted[1]}, 0, ${formatted[2]}, ${formatted[3]}, ${formatted[4]}, 0, ${formatted[5]}, 0, 0, 1, 0, ${formatted[6]}, ${formatted[7]}, 0, ${formatted[8]})`
+      }
+
+      const calculatePerspectiveOverlay = (frameData) => {
+        const points = orderFramePoints(frameData)
+        if (!points) return null
+
+        const frameWidth = frameData?.imageWidth
+        const frameHeight = frameData?.imageHeight
+        if (!Number.isFinite(frameWidth) || !Number.isFinite(frameHeight) || frameWidth === 0 || frameHeight === 0) {
+          return null
+        }
+
+        const bbox = getBoundingBox(points)
+        const bboxWidth = bbox.maxX - bbox.minX
+        const bboxHeight = bbox.maxY - bbox.minY
+        if (bboxWidth <= 0 || bboxHeight <= 0) return null
+
+        const normalized = points.map(point => ({
+          label: point.label,
+          x: (point.x - bbox.minX) / bboxWidth,
+          y: (point.y - bbox.minY) / bboxHeight
+        }))
+
+        const tl = normalized.find(p => p.label === 'topLeft')
+        const tr = normalized.find(p => p.label === 'topRight')
+        const br = normalized.find(p => p.label === 'bottomRight')
+        const bl = normalized.find(p => p.label === 'bottomLeft')
+
+        if (!tl || !tr || !br || !bl) return null
+
+        let matrix
+        try {
+          matrix = general2DProjection(
+            0, 0, 1, 0, 1, 1, 0, 1,
+            tl.x, tl.y, tr.x, tr.y, br.x, br.y, bl.x, bl.y
+          )
+        } catch (error) {
+          console.warn('[debug] Failed to compute perspective matrix:', error)
+          return null
+        }
+
+        return {
+          mode: '3d',
+          boundingBox: {
+            left: formatPercent(bbox.minX, frameWidth),
+            top: formatPercent(bbox.minY, frameHeight),
+            width: formatPercent(bboxWidth, frameWidth),
+            height: formatPercent(bboxHeight, frameHeight)
+          },
+          transform: matrixToCSS(matrix),
+          metadata: {
+            boundingBoxPx: bbox,
+            normalizedPoints: normalized
+          }
+        }
+      }
+
+      const calculateLegacyOverlay = (frameData) => {
+        const frameWidth = frameData?.imageWidth
+        const frameHeight = frameData?.imageHeight
+        if (!Number.isFinite(frameWidth) || !Number.isFinite(frameHeight) || frameWidth === 0 || frameHeight === 0) {
+          return null
+        }
+
+        const topLeft = frameData.topLeft || frameData.legacyTopLeft
+        const bottomRight = frameData.bottomRight || frameData.legacyBottomRight
+        const widthPx = frameData.width ?? (bottomRight && topLeft ? bottomRight.x - topLeft.x : null)
+        const heightPx = frameData.height ?? (bottomRight && topLeft ? bottomRight.y - topLeft.y : null)
+
+        if (!topLeft || !Number.isFinite(widthPx) || !Number.isFinite(heightPx) || widthPx <= 0 || heightPx <= 0) {
+          return null
+        }
+
+        return {
+          mode: 'rect',
+          rect: {
+            left: formatPercent(topLeft.x, frameWidth),
+            top: formatPercent(topLeft.y, frameHeight),
+            width: formatPercent(widthPx, frameWidth),
+            height: formatPercent(heightPx, frameHeight)
+          }
+        }
+      }
+
+      const buildOverlayData = (frameData) => {
+        if (!frameData) return null
+        return (
+          calculatePerspectiveOverlay(frameData) ||
+          calculateLegacyOverlay(frameData)
+        )
+      }
+
+      const setStatus = (label, isError = false) => {
+        statusBadge.textContent = label
+        statusBadge.classList.toggle('warning', isError)
+      }
+
+      const applyOverlayToImage = (overlay, frameData) => {
+        if (!overlay) {
+          userPhoto.style.display = 'none'
+          bbox.style.display = 'none'
+          setStatus('Overlay data missing', true)
+          return
+        }
+
+        // For 3D mode, use canvas clipping to the quadrilateral
+        if (overlay.mode === '3d' && frameData?.points?.length === 4) {
+          const canvas = document.createElement('canvas')
+          canvas.width = frameData.imageWidth
+          canvas.height = frameData.imageHeight
+          const ctx = canvas.getContext('2d')
+          
+          // Create clipping path from the 4 points
+          ctx.beginPath()
+          ctx.moveTo(frameData.points[0].x, frameData.points[0].y)
+          ctx.lineTo(frameData.points[1].x, frameData.points[1].y)
+          ctx.lineTo(frameData.points[2].x, frameData.points[2].y)
+          ctx.lineTo(frameData.points[3].x, frameData.points[3].y)
+          ctx.closePath()
+          ctx.clip()
+          
+          // Draw user photo inside the clipping region
+          const img = new Image()
+          img.crossOrigin = 'anonymous'
+          img.onload = () => {
+            // Get bounding box of the 4 points
+            const xs = frameData.points.map(p => p.x)
+            const ys = frameData.points.map(p => p.y)
+            const minX = Math.min(...xs)
+            const minY = Math.min(...ys)
+            const maxX = Math.max(...xs)
+            const maxY = Math.max(...ys)
+            
+            // Draw image to fill the bounding box (it will be clipped to the quad)
+            ctx.drawImage(img, minX, minY, maxX - minX, maxY - minY)
+            
+            // Set the canvas output as the user photo src
+            userPhoto.src = canvas.toDataURL('image/png')
+            userPhoto.style.display = 'block'
+            userPhoto.style.left = '0'
+            userPhoto.style.top = '0'
+            userPhoto.style.width = '100%'
+            userPhoto.style.height = '100%'
+            userPhoto.style.transform = 'none'
+            
+            setStatus('3D canvas clipping applied', false)
+          }
+          img.src = userImageInput.value.trim()
+          
+        } else {
+          // Rectangle mode - simple positioning
+          userPhoto.style.display = 'block'
+          const bboxStyles = overlay.rect
+          userPhoto.style.left = bboxStyles.left
+          userPhoto.style.top = bboxStyles.top
+          userPhoto.style.width = bboxStyles.width
+          userPhoto.style.height = bboxStyles.height
+          userPhoto.style.transform = 'none'
+          userPhoto.src = userImageInput.value.trim()
+          
+          setStatus('Rectangle mode', true)
+        }
+
+        const bboxStyles = overlay.mode === '3d' ? overlay.boundingBox : overlay.rect
+        bbox.style.display = 'block'
+        bbox.style.left = bboxStyles.left
+        bbox.style.top = bboxStyles.top
+        bbox.style.width = bboxStyles.width
+        bbox.style.height = bboxStyles.height
+      }
+
+      const renderOverlayInfo = (overlay) => {
+        if (!overlay) {
+          infoBox.textContent = '// Provide valid frame data and press Render'
+          return
+        }
+
+        const bbox = overlay.mode === '3d' ? overlay.boundingBox : overlay.rect
+        const lines = [
+          `mode: ${overlay.mode}`,
+          `boundingBox: ${JSON.stringify(bbox, null, 2)}`
+        ]
+
+        if (overlay.mode === '3d') {
+          lines.push(`transform: ${overlay.transform}`)
+          lines.push('')
+          lines.push('normalizedPoints:')
+          overlay.metadata?.normalizedPoints?.forEach(point => {
+            lines.push(`  ${point.label}: (${point.x.toFixed(4)}, ${point.y.toFixed(4)})`)
+          })
+        }
+
+        infoBox.textContent = lines.join('\n')
+      }
+
+      const renderPreview = () => {
+        setStatus('Rendering preview…')
+        try {
+          const frameData = JSON.parse(frameDataInput.value)
+          const overlay = buildOverlayData(frameData)
+
+          frameOverlay.src = frameImageInput.value.trim()
+
+          applyOverlayToImage(overlay, frameData)
+          renderOverlayInfo(overlay)
+        } catch (error) {
+          console.error('[debug] Failed to render preview:', error)
+          infoBox.textContent = `// Error parsing JSON: ${error.message}`
+          setStatus('Render failed', true)
+          bbox.style.display = 'none'
+        }
+      }
+
+      renderBtn.addEventListener('click', (event) => {
+        event.preventDefault()
+        renderPreview()
+      })
+      frameDataInput.addEventListener('keydown', (event) => {
+        if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+          renderPreview()
+        }
+      })
+
+      renderPreview()
+    </script>
+  </body>
+</html>

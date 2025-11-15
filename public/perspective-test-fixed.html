@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3D Perspective Transform Test - FIXED</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 40px;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    h1 {
+      margin: 0 0 30px 0;
+      color: #333;
+    }
+
+    .test-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      margin-bottom: 30px;
+    }
+
+    .test-item {
+      border: 2px solid #e0e0e0;
+      padding: 20px;
+      border-radius: 8px;
+    }
+
+    .test-item h3 {
+      margin: 0 0 15px 0;
+      color: #666;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .frame-container {
+      position: relative;
+      width: 500px;
+      height: 500px;
+      margin: 0 auto;
+      background: repeating-linear-gradient(
+        45deg,
+        #f0f0f0,
+        #f0f0f0 10px,
+        #e0e0e0 10px,
+        #e0e0e0 20px
+      );
+      border: 2px solid #999;
+      overflow: visible;
+    }
+
+    .frame-image {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+      pointer-events: none;
+      object-fit: contain;
+    }
+
+    .user-photo {
+      position: absolute;
+      object-fit: cover;
+      z-index: 5;
+    }
+
+    .corner-point {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      background: red;
+      border: 2px solid white;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 20;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+
+    .corner-label {
+      position: absolute;
+      background: rgba(0,0,0,0.9);
+      color: white;
+      padding: 3px 8px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-weight: bold;
+      white-space: nowrap;
+      transform: translate(-50%, -200%);
+    }
+
+    .info-box {
+      background: #f0f0f0;
+      padding: 15px;
+      border-radius: 6px;
+      margin-top: 15px;
+      font-size: 11px;
+      font-family: 'Courier New', monospace;
+      max-height: 300px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+
+    .toggle-btn {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-bottom: 15px;
+      margin-right: 10px;
+      font-size: 14px;
+    }
+
+    .toggle-btn:hover {
+      background: #5568d3;
+    }
+
+    .success { color: #28a745; font-weight: bold; }
+    .error { color: #dc3545; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎭 3D Perspective Transform Test - FIXED</h1>
+    
+    <div class="test-grid">
+      <!-- 2D Version -->
+      <div class="test-item">
+        <h3>❌ 2D RECTANGLE (Legacy Method)</h3>
+        <button class="toggle-btn" onclick="togglePoints('2d')">Toggle Corner Points</button>
+        <div class="frame-container" id="container-2d"></div>
+        <div class="info-box" id="info-2d">Loading...</div>
+      </div>
+
+      <!-- 3D Version -->
+      <div class="test-item">
+        <h3 class="success">✅ 3D PERSPECTIVE WARP (4-Point Transform)</h3>
+        <button class="toggle-btn" onclick="togglePoints('3d')">Toggle Corner Points</button>
+        <div class="frame-container" id="container-3d"></div>
+        <div class="info-box" id="info-3d">Loading...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Real frame data from server (8x8 tilted frame)
+    const frameData = {
+      imageWidth: 3000,
+      imageHeight: 3000,
+      points: [
+        { x: 1112, y: 1114, label: "topLeft" },
+        { x: 1929, y: 1063, label: "topRight" },
+        { x: 2023, y: 1930, label: "bottomRight" },
+        { x: 1196, y: 2011, label: "bottomLeft" }
+      ],
+      legacyTopLeft: { x: 1097, y: 1083 },
+      legacyBottomRight: { x: 2062, y: 1958 },
+      legacyWidth: 965,
+      legacyHeight: 875
+    }
+
+    const frameImageUrl = 'https://gallery.images.events/frameImages/horizontal/metal/premium/black/8x8-premium-metal.png'
+    const userImageUrl = 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=800'
+
+    // Perspective transform math
+    function adj(m) {
+      return [
+        m[4]*m[8]-m[5]*m[7], m[2]*m[7]-m[1]*m[8], m[1]*m[5]-m[2]*m[4],
+        m[5]*m[6]-m[3]*m[8], m[0]*m[8]-m[2]*m[6], m[2]*m[3]-m[0]*m[5],
+        m[3]*m[7]-m[4]*m[6], m[1]*m[6]-m[0]*m[7], m[0]*m[4]-m[1]*m[3]
+      ]
+    }
+
+    function multmm(a, b) {
+      const c = Array(9)
+      for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+          let cij = 0
+          for (let k = 0; k < 3; k++) {
+            cij += a[3*i + k]*b[3*k + j]
+          }
+          c[3*i + j] = cij
+        }
+      }
+      return c
+    }
+
+    function multmv(m, v) {
+      return [
+        m[0]*v[0] + m[1]*v[1] + m[2]*v[2],
+        m[3]*v[0] + m[4]*v[1] + m[5]*v[2],
+        m[6]*v[0] + m[7]*v[1] + m[8]*v[2]
+      ]
+    }
+
+    function basisToPoints(x1, y1, x2, y2, x3, y3, x4, y4) {
+      const m = [x1, x2, x3, y1, y2, y3, 1, 1, 1]
+      const v = multmv(adj(m), [x4, y4, 1])
+      return multmm(m, [v[0], 0, 0, 0, v[1], 0, 0, 0, v[2]])
+    }
+
+    function general2DProjection(...args) {
+      const s = basisToPoints(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7])
+      const d = basisToPoints(args[8], args[9], args[10], args[11], args[12], args[13], args[14], args[15])
+      return multmm(d, adj(s))
+    }
+
+    function matrixToCSS(m) {
+      return `matrix3d(${m[0]}, ${m[1]}, 0, ${m[2]}, ${m[3]}, ${m[4]}, 0, ${m[5]}, 0, 0, 1, 0, ${m[6]}, ${m[7]}, 0, ${m[8]})`
+    }
+
+    // Calculate bounding box from 4 points
+    function getBoundingBox(points) {
+      const xs = points.map(p => p.x)
+      const ys = points.map(p => p.y)
+      return {
+        minX: Math.min(...xs),
+        minY: Math.min(...ys),
+        maxX: Math.max(...xs),
+        maxY: Math.max(...ys)
+      }
+    }
+
+    // Normalize points relative to bounding box (0-1 range)
+    function normalizePointsToBBox(points, bbox) {
+      const width = bbox.maxX - bbox.minX
+      const height = bbox.maxY - bbox.minY
+      return points.map(p => ({
+        x: (p.x - bbox.minX) / width,
+        y: (p.y - bbox.minY) / height,
+        label: p.label
+      }))
+    }
+
+    // Convert to percentages for CSS
+    function toPercent(value, total) {
+      return (value / total * 100).toFixed(3) + '%'
+    }
+
+    // Render corner points
+    function renderCornerPoints(points, frameWidth, frameHeight, containerId) {
+      return points.map(p => {
+        const left = toPercent(p.x, frameWidth)
+        const top = toPercent(p.y, frameHeight)
+        return `
+          <div class="corner-point" data-container="${containerId}" style="left: ${left}; top: ${top}; display: none;">
+            <div class="corner-label">${p.label}</div>
+          </div>
+        `
+      }).join('')
+    }
+
+    // Toggle corner points visibility
+    window.togglePoints = function(containerId) {
+      const points = document.querySelectorAll(`[data-container="${containerId}"]`)
+      points.forEach(p => {
+        p.style.display = p.style.display === 'none' ? 'block' : 'none'
+      })
+    }
+
+    // Render the test
+    function render() {
+      const containerWidth = 500
+      const containerHeight = 500
+      const scaleX = containerWidth / frameData.imageWidth
+      const scaleY = containerHeight / frameData.imageHeight
+
+      // 2D VERSION (Legacy rectangle)
+      const left2D = toPercent(frameData.legacyTopLeft.x, frameData.imageWidth)
+      const top2D = toPercent(frameData.legacyTopLeft.y, frameData.imageHeight)
+      const width2D = toPercent(frameData.legacyWidth, frameData.imageWidth)
+      const height2D = toPercent(frameData.legacyHeight, frameData.imageHeight)
+
+      document.getElementById('container-2d').innerHTML = `
+        <img src="${userImageUrl}" class="user-photo" 
+          style="left: ${left2D}; top: ${top2D}; width: ${width2D}; height: ${height2D};"
+          crossorigin="anonymous">
+        <img src="${frameImageUrl}" class="frame-image" crossorigin="anonymous">
+        ${renderCornerPoints([
+          frameData.legacyTopLeft,
+          { x: frameData.legacyBottomRight.x, y: frameData.legacyTopLeft.y, label: 'TR' },
+          frameData.legacyBottomRight,
+          { x: frameData.legacyTopLeft.x, y: frameData.legacyBottomRight.y, label: 'BL' }
+        ], frameData.imageWidth, frameData.imageHeight, '2d')}
+      `
+
+      document.getElementById('info-2d').textContent = `
+2D Rectangle (Legacy):
+  Position: ${left2D}, ${top2D}
+  Size: ${width2D} × ${height2D}
+  
+Bounding Box:
+  topLeft: (${frameData.legacyTopLeft.x}, ${frameData.legacyTopLeft.y})
+  bottomRight: (${frameData.legacyBottomRight.x}, ${frameData.legacyBottomRight.y})
+      `.trim()
+
+      // 3D VERSION (4-point perspective warp)
+      const bbox = getBoundingBox(frameData.points)
+      const bboxWidth = bbox.maxX - bbox.minX
+      const bboxHeight = bbox.maxY - bbox.minY
+      
+      const normalized = normalizePointsToBBox(frameData.points, bbox)
+      const tl = normalized.find(p => p.label === 'topLeft')
+      const tr = normalized.find(p => p.label === 'topRight')
+      const br = normalized.find(p => p.label === 'bottomRight')
+      const bl = normalized.find(p => p.label === 'bottomLeft')
+
+      // Calculate transform matrix
+      const matrix = general2DProjection(
+        0, 0, 1, 0, 1, 1, 0, 1,  // Source (unit square)
+        tl.x, tl.y, tr.x, tr.y, br.x, br.y, bl.x, bl.y  // Destination (normalized quad)
+      )
+      const transform = matrixToCSS(matrix)
+
+      // Position and size based on bounding box
+      const left3D = toPercent(bbox.minX, frameData.imageWidth)
+      const top3D = toPercent(bbox.minY, frameData.imageHeight)
+      const width3D = toPercent(bboxWidth, frameData.imageWidth)
+      const height3D = toPercent(bboxHeight, frameData.imageHeight)
+
+      document.getElementById('container-3d').innerHTML = `
+        <img src="${userImageUrl}" class="user-photo" 
+          style="
+            left: ${left3D}; 
+            top: ${top3D}; 
+            width: ${width3D}; 
+            height: ${height3D};
+            transform: ${transform};
+            transform-origin: 0 0;
+          "
+          crossorigin="anonymous">
+        <img src="${frameImageUrl}" class="frame-image" crossorigin="anonymous">
+        ${renderCornerPoints(frameData.points, frameData.imageWidth, frameData.imageHeight, '3d')}
+      `
+
+      document.getElementById('info-3d').textContent = `
+3D Perspective Warp:
+  Bounding Box Position: ${left3D}, ${top3D}
+  Bounding Box Size: ${width3D} × ${height3D}
+  
+Transform Matrix:
+  ${transform.substring(0, 80)}...
+  
+4 Corner Points (absolute):
+  topLeft: (${frameData.points[0].x}, ${frameData.points[0].y})
+  topRight: (${frameData.points[1].x}, ${frameData.points[1].y})
+  bottomRight: (${frameData.points[2].x}, ${frameData.points[2].y})
+  bottomLeft: (${frameData.points[3].x}, ${frameData.points[3].y})
+  
+Bounding Box (px):
+  minX: ${bbox.minX}, minY: ${bbox.minY}
+  maxX: ${bbox.maxX}, maxY: ${bbox.maxY}
+  width: ${bboxWidth}, height: ${bboxHeight}
+  
+Normalized Points (0-1):
+  topLeft: (${tl.x.toFixed(4)}, ${tl.y.toFixed(4)})
+  topRight: (${tr.x.toFixed(4)}, ${tr.y.toFixed(4)})
+  bottomRight: (${br.x.toFixed(4)}, ${br.y.toFixed(4)})
+  bottomLeft: (${bl.x.toFixed(4)}, ${bl.y.toFixed(4)})
+      `.trim()
+
+      console.log('✅ Test page rendered successfully')
+      console.log('📐 Bounding box:', bbox)
+      console.log('🔄 Transform:', transform)
+    }
+
+    // Run on load
+    render()
+  </script>
+</body>
+</html>
