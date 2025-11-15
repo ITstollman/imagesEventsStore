@@ -5,7 +5,7 @@ import Cart from './Cart'
 import Footer from './Footer'
 import { useCart } from './CartContext'
 import { fetchFrameMapping } from './api'
-import { findBestFrameSizes, buildFrameOverlayData, createClippedUserPhoto } from './frameCompositor'
+import { findBestFrameSizes, buildFrameOverlayData, compositeWithCanvasClipping } from './frameCompositor'
 
 const API_BASE_URL = 'https://imageseventsbackend-production.up.railway.app'
 
@@ -19,19 +19,17 @@ const frameColors = [
 
 // Frame preview card with loading state
 function FramePreviewCard({ preview, product, onSelect, frameColors }) {
-  // DEBUGGER TEST MODE - exact same approach as the working debugger
-  if (preview.mode === 'debugger-test') {
-    const [userImageLoaded, setUserImageLoaded] = useState(false)
-    const [frameImageLoaded, setFrameImageLoaded] = useState(false)
-    const bothLoaded = userImageLoaded && frameImageLoaded
-    
+  const [imageLoaded, setImageLoaded] = useState(false)
+  
+  // For composited mode, we only have one image to load
+  if (preview.mode === 'composited') {
     return (
       <div 
         className="product-card"
-        onClick={bothLoaded ? onSelect : undefined}
-        style={{ cursor: bothLoaded ? 'pointer' : 'default' }}
+        onClick={imageLoaded ? onSelect : undefined}
+        style={{ cursor: imageLoaded ? 'pointer' : 'default' }}
       >
-        {!bothLoaded && (
+        {!imageLoaded && (
           <div className="product-image skeleton">
             <div className="skeleton-shimmer"></div>
           </div>
@@ -39,133 +37,23 @@ function FramePreviewCard({ preview, product, onSelect, frameColors }) {
         
         <div 
           className="product-image"
-          style={{ 
-            display: bothLoaded ? 'block' : 'none',
-            position: 'relative',
-            width: '100%',
-            aspectRatio: '1 / 1',
-            background: '#ffffff',
-            overflow: 'visible'
-          }}
+          style={{ display: imageLoaded ? 'block' : 'none' }}
         >
-          {/* Frame overlay (on top) */}
           <img 
-            src={preview.frameImageUrl}
-            alt={`Frame`}
+            src={preview.compositedImage} 
+            alt={`${preview.size} frame preview`}
             style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
               width: '100%',
               height: '100%',
-              objectFit: 'contain',
-              zIndex: 10
+              objectFit: 'contain'
             }}
             onLoad={() => {
-              console.log('🧪 TEST: Frame loaded')
-              setFrameImageLoaded(true)
-            }}
-          />
-          {/* User image (behind frame) */}
-          <img 
-            src={preview.userImage} 
-            alt={`Your photo`}
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              objectFit: 'contain',
-              zIndex: 5
-            }}
-            onLoad={() => {
-              console.log('🧪 TEST: User image loaded')
-              setUserImageLoaded(true)
-            }}
-          />
-        </div>
-        
-        <div className="product-info">
-          <h3 className="product-name">{preview.size}" 🧪</h3>
-          <p className="product-price">TEST (Debugger Style)</p>
-        </div>
-        <button className="product-button" disabled={!bothLoaded}>
-          {bothLoaded ? 'Select' : 'Loading...'}
-        </button>
-      </div>
-    )
-  }
-  
-  // For clipped-layered mode (separate clipped photo + frame, like debugger)
-  if (preview.mode === 'clipped-layered') {
-    const [clippedPhotoLoaded, setClippedPhotoLoaded] = useState(false)
-    const [frameOverlayLoaded, setFrameOverlayLoaded] = useState(false)
-    
-    const bothLoaded = clippedPhotoLoaded && frameOverlayLoaded
-    
-    return (
-      <div 
-        className="product-card"
-        onClick={bothLoaded ? onSelect : undefined}
-        style={{ cursor: bothLoaded ? 'pointer' : 'default' }}
-      >
-        {!bothLoaded && (
-          <div className="product-image skeleton">
-            <div className="skeleton-shimmer"></div>
-          </div>
-        )}
-        
-        <div 
-          className="product-image frame-preview-container"
-          style={{ display: bothLoaded ? 'block' : 'none' }}
-        >
-          {/* Frame overlay (on top) */}
-          <img 
-            src={preview.frameImageUrl}
-            alt={`${preview.size} frame`}
-            className="frame-overlay-layer"
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              objectFit: 'contain',
-              zIndex: 10,
-              display: 'block'
-            }}
-            onLoad={(e) => {
-              console.log('✅ Frame overlay loaded:', preview.size, `Natural size: ${e.target.naturalWidth}x${e.target.naturalHeight}`)
-              setFrameOverlayLoaded(true)
+              console.log('✅ Composited preview loaded:', preview.size)
+              setImageLoaded(true)
             }}
             onError={(e) => {
-              console.error('❌ Frame overlay failed:', preview.size)
-              setFrameOverlayLoaded(true)
-            }}
-          />
-          {/* Clipped user photo (behind frame) */}
-          <img 
-            src={preview.clippedPhotoUrl} 
-            alt={`Your photo clipped`}
-            className="clipped-photo-layer"
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              objectFit: 'contain',
-              zIndex: 5,
-              display: 'block'
-            }}
-            onLoad={(e) => {
-              console.log('✅ Clipped photo loaded:', preview.size, `Natural size: ${e.target.naturalWidth}x${e.target.naturalHeight}`)
-              setClippedPhotoLoaded(true)
-            }}
-            onError={(e) => {
-              console.error('❌ Clipped photo failed:', preview.size, e)
-              setClippedPhotoLoaded(true)
+              console.error('❌ Composited preview failed:', preview.size, e)
+              setImageLoaded(true)
             }}
           />
           <div className="product-colors">
@@ -187,8 +75,8 @@ function FramePreviewCard({ preview, product, onSelect, frameColors }) {
           <h3 className="product-name">{preview.size}"</h3>
           <p className="product-price">From $49.99</p>
         </div>
-        <button className="product-button" disabled={!bothLoaded}>
-          {bothLoaded ? 'Select' : 'Loading...'}
+        <button className="product-button" disabled={!imageLoaded}>
+          {imageLoaded ? 'Select' : 'Loading...'}
         </button>
       </div>
     )
@@ -383,7 +271,7 @@ function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
         
         console.log('🎯 Best matching frames:', bestMatches.map(m => m.size).join(', '))
         
-        // Generate previews - separate clipped photo + frame (like debugger)
+        // Generate composited previews using canvas
         const previewPromises = bestMatches.map(async (match) => {
           const frameData = match.frameData
           const frameImageUrl = `https://gallery.images.events/frameImages/${match.framePath}`
@@ -391,19 +279,22 @@ function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
           // Check if frame has 4 points for canvas clipping
           if (frameData?.points && frameData.points.length === 4) {
             try {
-              console.log(`🖼️ Creating clipped photo for ${match.size}...`)
-              const clippedPhotoUrl = await createClippedUserPhoto(image.src, frameData)
+              console.log(`🖼️ Compositing ${match.size} with canvas clipping...`)
+              const compositedImageUrl = await compositeWithCanvasClipping(
+                image.src,
+                frameImageUrl,
+                frameData
+              )
               
               return {
                 size: match.size,
-                clippedPhotoUrl,  // The user photo clipped to the quad
-                frameImageUrl,    // The frame overlay (separate)
+                compositedImage: compositedImageUrl,
                 framePath: match.framePath,
                 score: match.score,
-                mode: 'clipped-layered'
+                mode: 'composited'
               }
             } catch (error) {
-              console.error(`❌ Failed to clip photo for ${match.size}:`, error)
+              console.error(`❌ Failed to composite ${match.size}:`, error)
               // Fall back to CSS overlay
               const overlay = buildFrameOverlayData(frameData)
               return {
@@ -432,18 +323,6 @@ function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
         })
         
         const previews = await Promise.all(previewPromises)
-        
-        // ADD TEST PREVIEW using debugger's exact approach
-        if (bestMatches.length > 0 && bestMatches[0].frameData?.points?.length === 4) {
-          const testMatch = bestMatches[0]
-          previews.unshift({
-            size: `${testMatch.size} TEST`,
-            mode: 'debugger-test',
-            userImage: image.src,
-            frameImageUrl: `https://gallery.images.events/frameImages/${testMatch.framePath}`,
-            frameData: testMatch.frameData
-          })
-        }
         
         setFramePreviews(previews)
         console.log('✅ Generated', previews.length, 'frame previews')
