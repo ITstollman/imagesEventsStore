@@ -5,7 +5,7 @@ import Cart from './Cart'
 import Footer from './Footer'
 import { useCart } from './CartContext'
 import { fetchFrameMapping } from './api'
-import { generateSimpleFramePreviews } from './frameCompositor'
+import { findBestFrameSizes } from './frameCompositor'
 
 const API_BASE_URL = 'https://imageseventsbackend-production.up.railway.app'
 
@@ -23,6 +23,7 @@ function FramePreviewCard({ preview, product, onSelect, frameColors }) {
   const [frameLoaded, setFrameLoaded] = useState(false)
   
   const bothLoaded = userPhotoLoaded && frameLoaded
+  const is3D = preview.is3D || preview.mode === '3d'
   
   return (
     <div 
@@ -42,83 +43,96 @@ function FramePreviewCard({ preview, product, onSelect, frameColors }) {
         className="product-image frame-preview-container"
         style={{ display: bothLoaded ? 'block' : 'none' }}
       >
-        {/* User's photo positioned behind the frame */}
-        {preview.overlayData.mode === '3d' ? (
-          // 3D mode: Apply transform to wrapper, image scales to fill and overflow
-          <div
-            className="user-photo-wrapper"
-            style={{
-              position: 'absolute',
-              left: preview.overlayData.boundingBox.left,
-              top: preview.overlayData.boundingBox.top,
-              width: preview.overlayData.boundingBox.width,
-              height: preview.overlayData.boundingBox.height,
-              overflow: 'hidden',
-              zIndex: 2,
-              transform: preview.overlayData.transform,
-              transformOrigin: '0 0',
-              transformStyle: 'preserve-3d'
-            }}
-          >
+        {is3D ? (
+          // 3D Mode: Clipped user image already contains both photo and transparency
+          // Just display it behind the frame overlay
+          <>
+            <img 
+              src={preview.userImage} 
+              alt={`Your photo clipped`}
+              className="user-photo-preview user-photo-3d"
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                objectFit: 'contain',
+                zIndex: 1
+              }}
+              onLoad={() => {
+                console.log('✅ 3D clipped photo loaded:', preview.size)
+                setUserPhotoLoaded(true)
+              }}
+              onError={(e) => {
+                console.error('❌ 3D photo failed:', preview.size, e)
+                setUserPhotoLoaded(true)
+              }}
+            />
+            {/* Frame overlay on top */}
+            <img 
+              src={preview.frameImageUrl}
+              alt={`${preview.size} frame`}
+              className="frame-image-base"
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                objectFit: 'contain',
+                zIndex: 2,
+                pointerEvents: 'none'
+              }}
+              onLoad={() => {
+                console.log('✅ Frame loaded (3D):', preview.frameImageUrl.substring(0, 80))
+                setFrameLoaded(true)
+              }}
+              onError={(e) => {
+                console.error('❌ Frame failed (3D):', preview.frameImageUrl)
+                setFrameLoaded(true)
+              }}
+            />
+          </>
+        ) : (
+          // 2D Mode: CSS positioning with coordinates
+          <>
             <img 
               src={preview.userImage} 
               alt={`Your photo`}
               className="user-photo-preview"
               style={{
-                // Make image larger than container so it fills after transform
-                width: '120%',
-                height: '120%',
-                objectFit: 'cover',
-                position: 'absolute',
-                left: '-10%',
-                top: '-10%'
+                left: preview.coordinates.left,
+                top: preview.coordinates.top,
+                width: preview.coordinates.width,
+                height: preview.coordinates.height
               }}
               onLoad={() => {
-                console.log(`✅ User photo loaded: ${preview.size} (3d mode)`)
+                console.log('✅ 2D User photo loaded:', preview.size)
                 setUserPhotoLoaded(true)
               }}
               onError={(e) => {
-                console.error('❌ User photo failed:', preview.size, e)
+                console.error('❌ 2D User photo failed:', preview.size, e)
                 setUserPhotoLoaded(true)
               }}
             />
-          </div>
-        ) : (
-          // Rect mode: Simple positioned image
-          <img 
-            src={preview.userImage} 
-            alt={`Your photo`}
-            className="user-photo-preview"
-            style={{
-              left: preview.overlayData.rect.left,
-              top: preview.overlayData.rect.top,
-              width: preview.overlayData.rect.width,
-              height: preview.overlayData.rect.height
-            }}
-            onLoad={() => {
-              console.log(`✅ User photo loaded: ${preview.size} (rect mode)`)
-              setUserPhotoLoaded(true)
-            }}
-            onError={(e) => {
-              console.error('❌ User photo failed:', preview.size, e)
-              setUserPhotoLoaded(true)
-            }}
-          />
+            {/* Frame overlay on top */}
+            <img 
+              src={preview.frameImageUrl}
+              alt={`${preview.size} frame`}
+              className="frame-image-base"
+              onLoad={() => {
+                console.log('✅ Frame loaded (2D):', preview.frameImageUrl.substring(0, 80))
+                setFrameLoaded(true)
+              }}
+              onError={(e) => {
+                console.error('❌ Frame failed (2D):', preview.frameImageUrl)
+                setFrameLoaded(true)
+              }}
+            />
+          </>
         )}
-        {/* Frame overlay on top */}
-        <img 
-          src={preview.frameImageUrl}
-          alt={`${preview.size} frame`}
-          className="frame-image-base"
-          onLoad={() => {
-            console.log('✅ Frame loaded:', preview.frameImageUrl.substring(0, 80))
-            setFrameLoaded(true)
-          }}
-          onError={(e) => {
-            console.error('❌ Frame failed:', preview.frameImageUrl)
-            setFrameLoaded(true) // Show anyway to prevent infinite loading
-          }}
-        />
+        
         <div className="product-colors">
           {frameColors.map((color) => (
             <span
@@ -135,7 +149,7 @@ function FramePreviewCard({ preview, product, onSelect, frameColors }) {
       </div>
       
       <div className="product-info">
-        <h3 className="product-name">{preview.size}"</h3>
+        <h3 className="product-name">{preview.size}" {is3D ? '🎭' : ''}</h3>
         <p className="product-price">From $49.99</p>
       </div>
       <button className="product-button" disabled={!bothLoaded}>
@@ -214,7 +228,7 @@ function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
 
   // Generate frame previews when image or mapping changes
   useEffect(() => {
-    const generatePreviews = () => {
+    const generateFramePreviews = async () => {
       if (!frameMapping || !image.src || !image.dimensions) {
         setLoadingPreviews(false)
         return
@@ -225,28 +239,88 @@ function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
         console.log('🎨 Generating frame previews for image:', image.id)
         console.log('📐 Image dimensions:', image.dimensions.width, 'x', image.dimensions.height)
         
-        // Use the new perspective-aware preview generator
-        const previews = generateSimpleFramePreviews(
-          image.src,
-          image.dimensions,
+        // Find best matching frame sizes
+        const bestMatches = findBestFrameSizes(
+          image.dimensions.width,
+          image.dimensions.height,
           frameMapping,
-          'https://gallery.images.events/frameImages',
           4
         )
         
+        console.log('🎯 Best matching frames:', bestMatches.map(m => m.size).join(', '))
+        
+        // Generate previews with canvas clipping for 3D frames
+        const previewPromises = bestMatches.map(async (match) => {
+          const frameData = match.frameData
+          
+          // Check if this frame has 3D perspective (4 points)
+          const is3D = frameData.is3D && frameData.points && frameData.points.length === 4
+          
+          if (is3D) {
+            console.log(`🎭 3D frame detected for ${match.size}, using canvas clipping`)
+            
+            // Use canvas to clip user image to the 4-point polygon
+            try {
+              const clippedImageUrl = await clipImageToPolygon(
+                image.src,
+                frameData.points,
+                frameData.imageWidth,
+                frameData.imageHeight
+              )
+              
+              return {
+                size: match.size,
+                userImage: clippedImageUrl, // Canvas-generated clipped image
+                frameImageUrl: `https://gallery.images.events/frameImages/${match.framePath}`,
+                framePath: match.framePath,
+                score: match.score,
+                mode: '3d',
+                is3D: true
+              }
+            } catch (error) {
+              console.error(`❌ Failed to clip 3D frame ${match.size}:`, error)
+              // Fall back to 2D mode
+            }
+          }
+          
+          // 2D mode: Use CSS positioning (legacy or fallback)
+          const photoX = frameData.topLeft?.x || frameData.legacyTopLeft?.x
+          const photoY = frameData.topLeft?.y || frameData.legacyTopLeft?.y
+          const photoWidth = frameData.width
+          const photoHeight = frameData.height
+          const frameWidth = frameData.imageWidth
+          const frameHeight = frameData.imageHeight
+          
+          // Calculate percentages for CSS positioning
+          const left = (photoX / frameWidth) * 100
+          const top = (photoY / frameHeight) * 100
+          const width = (photoWidth / frameWidth) * 100
+          const height = (photoHeight / frameHeight) * 100
+          
+          return {
+            size: match.size,
+            userImage: image.src,
+            frameImageUrl: `https://gallery.images.events/frameImages/${match.framePath}`,
+            framePath: match.framePath,
+            score: match.score,
+            mode: '2d',
+            is3D: false,
+            coordinates: {
+              left: `${left}%`,
+              top: `${top}%`,
+              width: `${width}%`,
+              height: `${height}%`
+            }
+          }
+        })
+        
+        const previews = await Promise.all(previewPromises)
+        
         setFramePreviews(previews)
         console.log('✅ Generated', previews.length, 'frame previews')
-        
-        // Log preview details for debugging
-        previews.forEach(preview => {
-          console.log(`📍 Frame ${preview.size}:`, {
-            mode: preview.overlayData.mode,
-            positioning: preview.overlayData.mode === '3d' 
-              ? preview.overlayData.boundingBox 
-              : preview.overlayData.rect,
-            has3DTransform: preview.overlayData.mode === '3d',
-            frameUrl: preview.frameImageUrl.substring(0, 80) + '...'
-          })
+        console.log('📊 Modes:', {
+          '3D': previews.filter(p => p.is3D).length,
+          '2D': previews.filter(p => !p.is3D).length
         })
       } catch (error) {
         console.error('❌ Failed to generate frame previews:', error)
@@ -256,7 +330,74 @@ function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
       }
     }
     
-    generatePreviews()
+    // Helper function to clip image to a 4-point polygon using canvas
+    const clipImageToPolygon = (imageUrl, points, canvasWidth, canvasHeight) => {
+      return new Promise((resolve, reject) => {
+        const canvas = document.createElement('canvas')
+        canvas.width = canvasWidth
+        canvas.height = canvasHeight
+        const ctx = canvas.getContext('2d')
+        
+        // Clear canvas (transparent background)
+        ctx.clearRect(0, 0, canvasWidth, canvasHeight)
+        
+        // Load user image
+        const img = new Image()
+        img.crossOrigin = 'anonymous'
+        
+        img.onload = () => {
+          try {
+            // Create clipping path from the 4 points
+            ctx.beginPath()
+            ctx.moveTo(points[0].x, points[0].y)
+            for (let i = 1; i < points.length; i++) {
+              ctx.lineTo(points[i].x, points[i].y)
+            }
+            ctx.closePath()
+            ctx.clip()
+            
+            // Calculate bounding box of the 4 points to know where to draw
+            const xs = points.map(p => p.x)
+            const ys = points.map(p => p.y)
+            const minX = Math.min(...xs)
+            const minY = Math.min(...ys)
+            const maxX = Math.max(...xs)
+            const maxY = Math.max(...ys)
+            const bboxWidth = maxX - minX
+            const bboxHeight = maxY - minY
+            
+            // Calculate scale to cover the bounding box
+            const scaleX = bboxWidth / img.width
+            const scaleY = bboxHeight / img.height
+            const scale = Math.max(scaleX, scaleY)
+            
+            const scaledWidth = img.width * scale
+            const scaledHeight = img.height * scale
+            
+            // Center the image in the bounding box
+            const offsetX = minX + (bboxWidth - scaledWidth) / 2
+            const offsetY = minY + (bboxHeight - scaledHeight) / 2
+            
+            // Draw the image (will be clipped to the polygon)
+            ctx.drawImage(img, offsetX, offsetY, scaledWidth, scaledHeight)
+            
+            // Convert canvas to data URL
+            const dataUrl = canvas.toDataURL('image/png', 0.95)
+            resolve(dataUrl)
+          } catch (error) {
+            reject(error)
+          }
+        }
+        
+        img.onerror = () => {
+          reject(new Error('Failed to load user image for clipping'))
+        }
+        
+        img.src = imageUrl
+      })
+    }
+    
+    generateFramePreviews()
   }, [frameMapping, image.src, image.id, image.dimensions])
 
   // 5-second countdown before enabling download

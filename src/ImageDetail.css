@@ -205,9 +205,6 @@
   aspect-ratio: 1 / 1 !important;
   background: #ffffff;
   overflow: visible !important;
-  /* Enable 3D transforms for perspective correction */
-  transform-style: preserve-3d;
-  perspective: 1000px;
 }
 
 .frame-preview-container .user-photo-preview {
@@ -215,12 +212,6 @@
   position: absolute !important;
   object-fit: cover !important;
   z-index: 2;
-  /* Enable 3D transforms on the image itself */
-  transform-style: preserve-3d;
-  transform-origin: 0 0;
-  /* Smooth rendering for transformed images */
-  image-rendering: -webkit-optimize-contrast;
-  backface-visibility: hidden;
 }
 
 .frame-preview-container .frame-image-base {

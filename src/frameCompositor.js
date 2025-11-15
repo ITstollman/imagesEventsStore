@@ -3,8 +3,6 @@
  * Handles finding best matching frames and compositing user images into frame overlays
  */
 
-import { buildOverlayData } from './perspectiveTransform.js'
-
 /**
  * Calculate the aspect ratio of an image
  * Handles CORS by fetching through blob
@@ -63,27 +61,18 @@ export const parseSize = (sizeStr) => {
 /**
  * Calculate how well a frame size matches the image dimensions
  * Returns a score (lower is better)
- * Now uses actual frame photo area dimensions instead of filename size
  */
-export const calculateFrameMatch = (imageWidth, imageHeight, frameData) => {
-  // Use actual photo area dimensions from frame data
-  const frameWidth = frameData.width
-  const frameHeight = frameData.height
-  
-  if (!frameWidth || !frameHeight) {
-    console.warn('Frame missing width/height dimensions')
-    return Infinity
-  }
-  
+export const calculateFrameMatch = (imageWidth, imageHeight, frameSize) => {
+  const frame = parseSize(frameSize)
   const imageRatio = imageWidth / imageHeight
-  const frameRatio = frameWidth / frameHeight
+  const frameRatio = frame.width / frame.height
   
   // Calculate ratio difference (penalize aspect ratio mismatch heavily)
   const ratioDiff = Math.abs(imageRatio - frameRatio)
   
   // Calculate scale difference (how much the image needs to be resized)
   const imageArea = imageWidth * imageHeight
-  const frameArea = frameWidth * frameHeight
+  const frameArea = frame.width * frame.height
   const scaleDiff = Math.abs(Math.log(frameArea / imageArea))
   
   // Weighted score: aspect ratio is more important than scale
@@ -99,57 +88,36 @@ export const findBestFrameSizes = (imageWidth, imageHeight, frameMapping, topN =
   const orientation = determineOrientation(imageWidth, imageHeight)
   const frames = frameMapping.data.frames
   
-  console.log(`🔍 Looking for ${orientation} frames for ${imageWidth}x${imageHeight} image (ratio: ${(imageWidth/imageHeight).toFixed(2)})`)
-  
-  // Use Map to track best frame for each unique size (deduplication)
+  // Extract all unique sizes from frame paths that match orientation
   const sizeMap = new Map()
   
   for (const [framePath, frameData] of Object.entries(frames)) {
-    // Calculate actual orientation from frame dimensions
-    const actualOrientation = determineOrientation(frameData.width, frameData.height)
+    // Only consider frames with matching orientation
+    if (frameData.orientation !== orientation) continue
     
-    // Skip frames where server orientation doesn't match actual dimensions
-    // (This handles cases where frames are miscategorized)
-    if (actualOrientation !== frameData.orientation) {
-      console.warn(`⚠️ Frame ${framePath} marked as ${frameData.orientation} but dimensions ${frameData.width}x${frameData.height} indicate ${actualOrientation}`)
-    }
-    
-    // Match based on ACTUAL orientation from dimensions, not server label
-    if (actualOrientation !== orientation) continue
-    
-    // Extract size from filename for display purposes
+    // Extract size from filename (e.g., "H-16x20-premium-metal.png" -> "16x20")
     const filename = framePath.split('/').pop()
     const sizeMatch = filename.match(/(\d+x\d+)/)
     
-    if (sizeMatch && frameData.width && frameData.height) {
+    if (sizeMatch) {
       const size = sizeMatch[1]
-      const score = calculateFrameMatch(imageWidth, imageHeight, frameData)
-      const frameRatio = frameData.width / frameData.height
+      const score = calculateFrameMatch(imageWidth, imageHeight, size)
       
-      console.log(`  📏 ${size}: actual ${frameData.width}x${frameData.height} (ratio ${frameRatio.toFixed(2)}) → score: ${score.toFixed(2)}`)
-      
-      // Only keep the best-scoring frame for each unique size
       if (!sizeMap.has(size) || sizeMap.get(size).score > score) {
         sizeMap.set(size, {
           size,
           score,
           framePath,
-          frameData,
-          actualDimensions: `${frameData.width}x${frameData.height}`,
-          actualRatio: frameRatio
+          frameData
         })
       }
     }
   }
   
-  // Convert Map to array, sort by score, and return top N unique sizes
-  const topMatches = Array.from(sizeMap.values())
+  // Sort by score and return top N
+  return Array.from(sizeMap.values())
     .sort((a, b) => a.score - b.score)
     .slice(0, topN)
-  
-  console.log(`✅ Top ${topMatches.length} unique sizes:`, topMatches.map(m => `${m.size} (${m.actualDimensions}, score: ${m.score.toFixed(2)})`).join(', '))
-  
-  return topMatches
 }
 
 /**
@@ -275,63 +243,7 @@ export const compositeImageIntoFrame = async (
 }
 
 /**
- * Generate simple CSS-based frame previews (no canvas compositing)
- * Uses perspective transforms for 3D frames and simple rectangles for legacy frames
- */
-export const generateSimpleFramePreviews = (
-  userImageUrl,
-  imageDimensions,
-  frameMapping,
-  frameBaseUrl = 'https://gallery.images.events/frameImages',
-  topN = 4
-) => {
-  if (!imageDimensions || !frameMapping) return []
-  
-  // Find best matching frame sizes
-  const bestMatches = findBestFrameSizes(
-    imageDimensions.width,
-    imageDimensions.height,
-    frameMapping,
-    topN
-  )
-  
-  if (bestMatches.length === 0) {
-    console.warn('No matching frames found for image dimensions:', imageDimensions.width, imageDimensions.height)
-    return []
-  }
-  
-  console.log('🎯 Best matching frames:', bestMatches.map(m => m.size).join(', '))
-  
-  // Generate preview data with overlay calculations
-  const previews = bestMatches.map(match => {
-    const frameData = match.frameData
-    const overlayData = buildOverlayData(frameData)
-    
-    if (!overlayData) {
-      console.warn(`⚠️ Could not calculate overlay for frame ${match.size}`)
-      return null
-    }
-    
-    // Log the overlay mode for debugging
-    console.log(`🎨 Frame ${match.size}: ${overlayData.mode} mode`)
-    
-    return {
-      size: match.size,
-      userImage: userImageUrl,
-      frameImageUrl: `${frameBaseUrl}/${match.framePath}`,
-      framePath: match.framePath,
-      score: match.score,
-      overlayData, // Contains mode, positioning, and transform
-      frameData // Keep original for reference
-    }
-  })
-  
-  return previews.filter(p => p !== null)
-}
-
-/**
  * Generate frame previews for the top 4 matching sizes
- * @deprecated Use generateSimpleFramePreviews instead for CSS-based overlays
  */
 export const generateFramePreviews = async (
   userImageUrl,
