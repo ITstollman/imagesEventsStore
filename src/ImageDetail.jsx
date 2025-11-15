@@ -331,109 +331,88 @@ function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
     }
     
     // Helper function to clip image to a 4-point polygon using canvas
-    const clipImageToPolygon = async (imageUrl, points, canvasWidth, canvasHeight) => {
-      return new Promise(async (resolve, reject) => {
-        try {
-          const canvas = document.createElement('canvas')
-          canvas.width = canvasWidth
-          canvas.height = canvasHeight
-          const ctx = canvas.getContext('2d')
-          
-          // Clear canvas (transparent background)
-          ctx.clearRect(0, 0, canvasWidth, canvasHeight)
-          
-          // Fetch image as blob to bypass CORS
-          console.log('📥 Fetching user image as blob for 3D clipping:', imageUrl.substring(0, 100))
-          const imageBlob = await fetch(imageUrl).then(res => {
-            if (!res.ok) {
-              console.error('❌ Fetch failed with status:', res.status, res.statusText)
-              throw new Error(`Failed to fetch image: ${res.status} ${res.statusText}`)
+    const clipImageToPolygon = (imageUrl, points, canvasWidth, canvasHeight) => {
+      return new Promise((resolve, reject) => {
+        const canvas = document.createElement('canvas')
+        canvas.width = canvasWidth
+        canvas.height = canvasHeight
+        const ctx = canvas.getContext('2d')
+        
+        // Clear canvas (transparent background)
+        ctx.clearRect(0, 0, canvasWidth, canvasHeight)
+        
+        // Load image directly (no fetch/blob needed - Firebase serves with proper headers for img tags)
+        console.log('🎨 Loading image for 3D clipping...')
+        const img = new Image()
+        img.crossOrigin = 'anonymous' // Request CORS access
+        
+        img.onload = () => {
+          try {
+            console.log('✅ Image loaded:', img.width, 'x', img.height)
+            
+            // Create clipping path from the 4 points
+            ctx.beginPath()
+            ctx.moveTo(points[0].x, points[0].y)
+            for (let i = 1; i < points.length; i++) {
+              ctx.lineTo(points[i].x, points[i].y)
             }
-            console.log('✅ Fetch successful, blob size:', res.headers.get('content-length'))
-            return res.blob()
-          }).catch(err => {
-            console.error('❌ Fetch error:', err.message)
-            throw err
-          })
-          const imageBlobUrl = URL.createObjectURL(imageBlob)
-          console.log('✅ User image blob created successfully, size:', imageBlob.size, 'bytes')
-          
-          // Load user image from blob URL
-          const img = new Image()
-          
-          img.onload = () => {
-            try {
-              // Create clipping path from the 4 points
-              ctx.beginPath()
-              ctx.moveTo(points[0].x, points[0].y)
-              for (let i = 1; i < points.length; i++) {
-                ctx.lineTo(points[i].x, points[i].y)
-              }
-              ctx.closePath()
-              ctx.clip()
-              
-              // Calculate bounding box of the 4 points
-              const xs = points.map(p => p.x)
-              const ys = points.map(p => p.y)
-              const minX = Math.min(...xs)
-              const minY = Math.min(...ys)
-              const maxX = Math.max(...xs)
-              const maxY = Math.max(...ys)
-              const bboxWidth = maxX - minX
-              const bboxHeight = maxY - minY
-              
-              // Calculate scale to COVER the bounding box (fill completely)
-              // Scale relative to bbox dimensions, not original image size
-              const imgAspect = img.width / img.height
-              const bboxAspect = bboxWidth / bboxHeight
-              
-              let drawWidth, drawHeight
-              if (imgAspect > bboxAspect) {
-                // Image is wider - fit to height
-                drawHeight = bboxHeight
-                drawWidth = drawHeight * imgAspect
-              } else {
-                // Image is taller - fit to width
-                drawWidth = bboxWidth
-                drawHeight = drawWidth / imgAspect
-              }
-              
-              // Center the image in the bounding box
-              const offsetX = minX + (bboxWidth - drawWidth) / 2
-              const offsetY = minY + (bboxHeight - drawHeight) / 2
-              
-              // Draw the image (will be clipped to the polygon)
-              ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight)
-              
-              console.log('🎨 3D Clipping:', {
-                imageSize: `${img.width}x${img.height}`,
-                bboxSize: `${bboxWidth.toFixed(0)}x${bboxHeight.toFixed(0)}`,
-                drawSize: `${drawWidth.toFixed(0)}x${drawHeight.toFixed(0)}`,
-                offset: `${offsetX.toFixed(0)},${offsetY.toFixed(0)}`
-              })
-              
-              // Clean up blob URL
-              URL.revokeObjectURL(imageBlobUrl)
-              
-              // Convert canvas to data URL
-              const dataUrl = canvas.toDataURL('image/png', 0.95)
-              console.log('✅ 3D clipping successful, canvas converted to data URL')
-              resolve(dataUrl)
-            } catch (error) {
-              URL.revokeObjectURL(imageBlobUrl)
-              reject(error)
+            ctx.closePath()
+            ctx.clip()
+            
+            // Calculate bounding box of the 4 points
+            const xs = points.map(p => p.x)
+            const ys = points.map(p => p.y)
+            const minX = Math.min(...xs)
+            const minY = Math.min(...ys)
+            const maxX = Math.max(...xs)
+            const maxY = Math.max(...ys)
+            const bboxWidth = maxX - minX
+            const bboxHeight = maxY - minY
+            
+            // Calculate scale to COVER the bounding box (fill completely)
+            const imgAspect = img.width / img.height
+            const bboxAspect = bboxWidth / bboxHeight
+            
+            let drawWidth, drawHeight
+            if (imgAspect > bboxAspect) {
+              // Image is wider - fit to height
+              drawHeight = bboxHeight
+              drawWidth = drawHeight * imgAspect
+            } else {
+              // Image is taller - fit to width
+              drawWidth = bboxWidth
+              drawHeight = drawWidth / imgAspect
             }
+            
+            // Center the image in the bounding box
+            const offsetX = minX + (bboxWidth - drawWidth) / 2
+            const offsetY = minY + (bboxHeight - drawHeight) / 2
+            
+            // Draw the image (will be clipped to the polygon)
+            ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight)
+            
+            console.log('🎨 3D Clipping successful:', {
+              imageSize: `${img.width}x${img.height}`,
+              bboxSize: `${bboxWidth.toFixed(0)}x${bboxHeight.toFixed(0)}`,
+              drawSize: `${drawWidth.toFixed(0)}x${drawHeight.toFixed(0)}`,
+              offset: `${offsetX.toFixed(0)},${offsetY.toFixed(0)}`
+            })
+            
+            // Convert canvas to data URL
+            const dataUrl = canvas.toDataURL('image/png', 0.95)
+            resolve(dataUrl)
+          } catch (error) {
+            console.error('❌ Canvas drawing error:', error)
+            reject(error)
           }
-          
-          img.onerror = () => {
-            URL.revokeObjectURL(imageBlobUrl)
-            reject(new Error('Failed to load user image for clipping'))
-          }
-          
-          img.src = imageBlobUrl
-        } catch (error) {
-          reject(error)
         }
+        
+        img.onerror = (e) => {
+          console.error('❌ Image load failed:', e)
+          reject(new Error('Failed to load user image for clipping'))
+        }
+        
+        img.src = imageUrl
       })
     }
     
