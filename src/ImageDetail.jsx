@@ -139,10 +139,12 @@ function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
   const [frameMapping, setFrameMapping] = useState(null)
   const [framePreviews, setFramePreviews] = useState([])
   const [loadingPreviews, setLoadingPreviews] = useState(true)
+  const [downloadEnabled, setDownloadEnabled] = useState(false)
+  const [downloadCountdown, setDownloadCountdown] = useState(5)
   const { getCartCount } = useCart()
 
-  // Use API print options if available, otherwise use default products
-  const frameProducts = printOptions && printOptions.length > 0 ? printOptions : defaultProducts
+  // Use API print options if available, otherwise empty array (no fallback)
+  const frameProducts = printOptions && printOptions.length > 0 ? printOptions : []
 
   // Load frame mapping on mount
   useEffect(() => {
@@ -232,6 +234,25 @@ function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
     
     generateSimplePreviews()
   }, [frameMapping, image.src, image.id, image.dimensions])
+
+  // 5-second countdown before enabling download
+  useEffect(() => {
+    setDownloadEnabled(false)
+    setDownloadCountdown(5)
+    
+    const timer = setInterval(() => {
+      setDownloadCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(timer)
+          setDownloadEnabled(true)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+    
+    return () => clearInterval(timer)
+  }, [image.id])
 
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -343,7 +364,15 @@ function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
                   style={{ opacity: imageLoaded ? 1 : 0 }}
                 />
               </div>
-              <button onClick={handleDownload} className="download-button" disabled={downloading}>
+              <button 
+                onClick={handleDownload} 
+                className="download-button" 
+                disabled={!downloadEnabled || downloading}
+                style={{ 
+                  opacity: !downloadEnabled ? 0.5 : 1,
+                  cursor: !downloadEnabled ? 'not-allowed' : 'pointer'
+                }}
+              >
                 {downloading ? (
                   <>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -352,6 +381,14 @@ function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
                       <line x1="12" y1="14" x2="12" y2="3" />
                     </svg>
                     Downloading<span className="dots"></span>
+                  </>
+                ) : !downloadEnabled ? (
+                  <>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    Wait {downloadCountdown}s to download...
                   </>
                 ) : (
                   <>
