@@ -5,7 +5,7 @@ import Cart from './Cart'
 import Footer from './Footer'
 import { useCart } from './CartContext'
 import { fetchFrameMapping } from './api'
-import { findBestFrameSizes, buildFrameOverlayData, compositeWithCanvasClipping } from './frameCompositor'
+import { findBestFrameSizes, buildFrameOverlayData, createClippedUserPhoto } from './frameCompositor'
 
 const API_BASE_URL = 'https://imageseventsbackend-production.up.railway.app'
 
@@ -19,41 +19,71 @@ const frameColors = [
 
 // Frame preview card with loading state
 function FramePreviewCard({ preview, product, onSelect, frameColors }) {
-  const [imageLoaded, setImageLoaded] = useState(false)
+  const [clippedPhotoLoaded, setClippedPhotoLoaded] = useState(false)
+  const [frameLoaded, setFrameLoaded] = useState(false)
   
-  // For composited mode, we only have one image to load
-  if (preview.mode === 'composited') {
+  // For clipped-layered mode (separate clipped photo + frame, like debugger)
+  if (preview.mode === 'clipped-layered') {
+    const bothLoaded = clippedPhotoLoaded && frameLoaded
+    
     return (
       <div 
         className="product-card"
-        onClick={imageLoaded ? onSelect : undefined}
-        style={{ cursor: imageLoaded ? 'pointer' : 'default' }}
+        onClick={bothLoaded ? onSelect : undefined}
+        style={{ cursor: bothLoaded ? 'pointer' : 'default' }}
       >
-        {!imageLoaded && (
+        {!bothLoaded && (
           <div className="product-image skeleton">
             <div className="skeleton-shimmer"></div>
           </div>
         )}
         
         <div 
-          className="product-image"
-          style={{ display: imageLoaded ? 'block' : 'none' }}
+          className="product-image frame-preview-container"
+          style={{ display: bothLoaded ? 'block' : 'none' }}
         >
+          {/* Clipped user photo (behind) */}
           <img 
-            src={preview.compositedImage} 
-            alt={`${preview.size} frame preview`}
+            src={preview.clippedPhotoUrl} 
+            alt={`Your photo clipped`}
             style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
               width: '100%',
               height: '100%',
-              objectFit: 'contain'
+              objectFit: 'contain',
+              zIndex: 2
             }}
             onLoad={() => {
-              console.log('✅ Composited preview loaded:', preview.size)
-              setImageLoaded(true)
+              console.log('✅ Clipped photo loaded:', preview.size)
+              setClippedPhotoLoaded(true)
             }}
             onError={(e) => {
-              console.error('❌ Composited preview failed:', preview.size, e)
-              setImageLoaded(true)
+              console.error('❌ Clipped photo failed:', preview.size, e)
+              setClippedPhotoLoaded(true)
+            }}
+          />
+          {/* Frame overlay (on top) */}
+          <img 
+            src={preview.frameImageUrl}
+            alt={`${preview.size} frame`}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              zIndex: 3
+            }}
+            onLoad={() => {
+              console.log('✅ Frame overlay loaded:', preview.size)
+              setFrameLoaded(true)
+            }}
+            onError={(e) => {
+              console.error('❌ Frame overlay failed:', preview.size)
+              setFrameLoaded(true)
             }}
           />
           <div className="product-colors">
@@ -75,8 +105,8 @@ function FramePreviewCard({ preview, product, onSelect, frameColors }) {
           <h3 className="product-name">{preview.size}"</h3>
           <p className="product-price">From $49.99</p>
         </div>
-        <button className="product-button" disabled={!imageLoaded}>
-          {imageLoaded ? 'Select' : 'Loading...'}
+        <button className="product-button" disabled={!bothLoaded}>
+          {bothLoaded ? 'Select' : 'Loading...'}
         </button>
       </div>
     )
@@ -271,7 +301,7 @@ function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
         
         console.log('🎯 Best matching frames:', bestMatches.map(m => m.size).join(', '))
         
-        // Generate composited previews using canvas
+        // Generate previews - separate clipped photo + frame (like debugger)
         const previewPromises = bestMatches.map(async (match) => {
           const frameData = match.frameData
           const frameImageUrl = `https://gallery.images.events/frameImages/${match.framePath}`
@@ -279,22 +309,19 @@ function ImageDetail({ image, printOptions, eventId, onBack, onAddedToCart }) {
           // Check if frame has 4 points for canvas clipping
           if (frameData?.points && frameData.points.length === 4) {
             try {
-              console.log(`🖼️ Compositing ${match.size} with canvas clipping...`)
-              const compositedImageUrl = await compositeWithCanvasClipping(
-                image.src,
-                frameImageUrl,
-                frameData
-              )
+              console.log(`🖼️ Creating clipped photo for ${match.size}...`)
+              const clippedPhotoUrl = await createClippedUserPhoto(image.src, frameData)
               
               return {
                 size: match.size,
-                compositedImage: compositedImageUrl,
+                clippedPhotoUrl,  // The user photo clipped to the quad
+                frameImageUrl,    // The frame overlay (separate)
                 framePath: match.framePath,
                 score: match.score,
-                mode: 'composited'
+                mode: 'clipped-layered'
               }
             } catch (error) {
-              console.error(`❌ Failed to composite ${match.size}:`, error)
+              console.error(`❌ Failed to clip photo for ${match.size}:`, error)
               // Fall back to CSS overlay
               const overlay = buildFrameOverlayData(frameData)
               return {

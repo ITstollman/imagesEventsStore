@@ -310,134 +310,67 @@ export const buildFrameOverlayData = (frameData) => {
 }
 
 /**
- * Composite user image into frame using canvas clipping (for tilted frames)
+ * Create clipped user image (without frame) - returns ONLY the user photo clipped to quad
+ * This matches the debugger approach: separate images, not composited
  * @param {string} userImageUrl - URL of the user's photo
- * @param {string} frameImageUrl - URL of the frame overlay
  * @param {Object} frameData - Frame data with points array
- * @returns {Promise<string>} - Data URL of the composited image
+ * @returns {Promise<string>} - Data URL of JUST the clipped user photo
  */
-export const compositeWithCanvasClipping = async (userImageUrl, frameImageUrl, frameData) => {
-  return new Promise(async (resolve, reject) => {
+export const createClippedUserPhoto = async (userImageUrl, frameData) => {
+  return new Promise((resolve, reject) => {
     // Check if we have the 4 points needed for clipping
     if (!frameData?.points || frameData.points.length !== 4) {
       reject(new Error('Frame data missing required 4 points'))
       return
     }
 
-    try {
-      // Fetch images as blobs to bypass CORS
-      console.log('📥 Fetching user image as blob:', userImageUrl.substring(0, 80))
-      const userImageBlob = await fetch(userImageUrl)
-        .then(res => {
-          if (!res.ok) throw new Error(`Failed to fetch user image: ${res.status}`)
-          return res.blob()
-        })
-      const userImageBlobUrl = URL.createObjectURL(userImageBlob)
+    const canvas = document.createElement('canvas')
+    canvas.width = frameData.imageWidth || 3000
+    canvas.height = frameData.imageHeight || 3000
+    const ctx = canvas.getContext('2d')
 
-      console.log('📥 Fetching frame image as blob:', frameImageUrl.substring(0, 80))
-      const frameImageBlob = await fetch(frameImageUrl)
-        .then(res => {
-          if (!res.ok) throw new Error(`Failed to fetch frame image: ${res.status}`)
-          return res.blob()
-        })
-      const frameImageBlobUrl = URL.createObjectURL(frameImageBlob)
+    // Load user image only
+    const userImg = new Image()
+    userImg.crossOrigin = 'anonymous'
 
-      const canvas = document.createElement('canvas')
-      canvas.width = frameData.imageWidth || 3000
-      canvas.height = frameData.imageHeight || 3000
-      const ctx = canvas.getContext('2d')
+    userImg.onload = () => {
+      try {
+        // Clear canvas (transparent background)
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-      // Load both images from blob URLs
-      const userImg = new Image()
-      const frameImg = new Image()
+        // Set clipping path from the 4 points
+        ctx.beginPath()
+        ctx.moveTo(frameData.points[0].x, frameData.points[0].y)
+        ctx.lineTo(frameData.points[1].x, frameData.points[1].y)
+        ctx.lineTo(frameData.points[2].x, frameData.points[2].y)
+        ctx.lineTo(frameData.points[3].x, frameData.points[3].y)
+        ctx.closePath()
+        ctx.clip()
 
-      let userLoaded = false
-      let frameLoaded = false
+        // Get bounding box of the 4 points
+        const xs = frameData.points.map(p => p.x)
+        const ys = frameData.points.map(p => p.y)
+        const minX = Math.min(...xs)
+        const minY = Math.min(...ys)
+        const maxX = Math.max(...xs)
+        const maxY = Math.max(...ys)
+        const bboxWidth = maxX - minX
+        const bboxHeight = maxY - minY
 
-      const tryComposite = () => {
-        if (!userLoaded || !frameLoaded) return
+        // Draw user image to fill bounding box (will be clipped to quad)
+        ctx.drawImage(userImg, minX, minY, bboxWidth, bboxHeight)
 
-        try {
-          // Clear canvas
-          ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-          // Save context state before clipping
-          ctx.save()
-
-          // Set clipping path from the 4 points
-          ctx.beginPath()
-          ctx.moveTo(frameData.points[0].x, frameData.points[0].y)
-          ctx.lineTo(frameData.points[1].x, frameData.points[1].y)
-          ctx.lineTo(frameData.points[2].x, frameData.points[2].y)
-          ctx.lineTo(frameData.points[3].x, frameData.points[3].y)
-          ctx.closePath()
-          ctx.clip()
-
-          // Get bounding box of the 4 points
-          const xs = frameData.points.map(p => p.x)
-          const ys = frameData.points.map(p => p.y)
-          const minX = Math.min(...xs)
-          const minY = Math.min(...ys)
-          const maxX = Math.max(...xs)
-          const maxY = Math.max(...ys)
-          const bboxWidth = maxX - minX
-          const bboxHeight = maxY - minY
-
-          // Draw user image to fill bounding box (will be clipped to quad)
-          ctx.drawImage(userImg, minX, minY, bboxWidth, bboxHeight)
-
-          // Restore context to remove clipping
-          ctx.restore()
-
-          // Draw frame on top
-          ctx.drawImage(frameImg, 0, 0, canvas.width, canvas.height)
-
-          // Clean up blob URLs
-          URL.revokeObjectURL(userImageBlobUrl)
-          URL.revokeObjectURL(frameImageBlobUrl)
-
-          console.log('✅ Canvas compositing complete')
-
-          // Convert to data URL
-          resolve(canvas.toDataURL('image/png', 0.92))
-        } catch (error) {
-          URL.revokeObjectURL(userImageBlobUrl)
-          URL.revokeObjectURL(frameImageBlobUrl)
-          reject(error)
-        }
+        // Convert to data URL - ONLY the clipped user photo, no frame
+        resolve(canvas.toDataURL('image/png', 0.95))
+      } catch (error) {
+        reject(error)
       }
-
-      userImg.onload = () => {
-        console.log('✅ User image loaded into canvas')
-        userLoaded = true
-        tryComposite()
-      }
-
-      frameImg.onload = () => {
-        console.log('✅ Frame image loaded into canvas')
-        frameLoaded = true
-        tryComposite()
-      }
-
-      userImg.onerror = () => {
-        URL.revokeObjectURL(userImageBlobUrl)
-        URL.revokeObjectURL(frameImageBlobUrl)
-        reject(new Error('Failed to load user image'))
-      }
-
-      frameImg.onerror = () => {
-        URL.revokeObjectURL(userImageBlobUrl)
-        URL.revokeObjectURL(frameImageBlobUrl)
-        reject(new Error('Failed to load frame image'))
-      }
-
-      // Start loading from blob URLs
-      userImg.src = userImageBlobUrl
-      frameImg.src = frameImageBlobUrl
-    } catch (error) {
-      console.error('❌ Failed to fetch images as blobs:', error)
-      reject(error)
     }
+
+    userImg.onerror = () => reject(new Error('Failed to load user image'))
+
+    // Start loading
+    userImg.src = userImageUrl
   })
 }
 
