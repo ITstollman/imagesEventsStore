@@ -316,108 +316,100 @@ export const buildFrameOverlayData = (frameData) => {
  * @param {Object} frameData - Frame data with points array
  * @returns {Promise<string>} - Data URL of the composited image
  */
-export const compositeWithCanvasClipping = async (userImageUrl, frameImageUrl, frameData) => {
+const fetchImageToElement = async (imageUrl) => {
+  const response = await fetch(imageUrl, { mode: 'cors' })
+  if (!response.ok) {
+    throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`)
+  }
+
+  const blob = await response.blob()
   return new Promise((resolve, reject) => {
-    // Check if we have the 4 points needed for clipping
-    if (!frameData?.points || frameData.points.length !== 4) {
-      reject(new Error('Frame data missing required 4 points'))
-      return
+    const objectUrl = URL.createObjectURL(blob)
+    const img = new Image()
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl)
+      resolve(img)
     }
-
-    const canvas = document.createElement('canvas')
-    canvas.width = frameData.imageWidth || 3000
-    canvas.height = frameData.imageHeight || 3000
-    const ctx = canvas.getContext('2d')
-
-    // Load both images
-    const userImg = new Image()
-    const frameImg = new Image()
-    userImg.crossOrigin = 'anonymous'
-    frameImg.crossOrigin = 'anonymous'
-
-    let userLoaded = false
-    let frameLoaded = false
-
-    const tryComposite = () => {
-      if (!userLoaded || !frameLoaded) return
-
-      try {
-        // Clear canvas
-        ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-        // Save context state before clipping
-        ctx.save()
-
-        // Set clipping path from the 4 points
-        ctx.beginPath()
-        ctx.moveTo(frameData.points[0].x, frameData.points[0].y)
-        ctx.lineTo(frameData.points[1].x, frameData.points[1].y)
-        ctx.lineTo(frameData.points[2].x, frameData.points[2].y)
-        ctx.lineTo(frameData.points[3].x, frameData.points[3].y)
-        ctx.closePath()
-        ctx.clip()
-
-        // Get bounding box of the 4 points
-        const xs = frameData.points.map(p => p.x)
-        const ys = frameData.points.map(p => p.y)
-        const minX = Math.min(...xs)
-        const minY = Math.min(...ys)
-        const maxX = Math.max(...xs)
-        const maxY = Math.max(...ys)
-        const bboxWidth = maxX - minX
-        const bboxHeight = maxY - minY
-
-        // Draw user image to fill bounding box (object-fit: cover)
-        const imageRatio = userImg.width / userImg.height
-        const bboxRatio = bboxWidth / bboxHeight
-        let drawWidth
-        let drawHeight
-
-        if (imageRatio > bboxRatio) {
-          // Image is wider - match height, crop width
-          drawHeight = bboxHeight
-          drawWidth = bboxHeight * imageRatio
-        } else {
-          // Image is taller - match width, crop height
-          drawWidth = bboxWidth
-          drawHeight = bboxWidth / imageRatio
-        }
-
-        const drawX = minX + (bboxWidth - drawWidth) / 2
-        const drawY = minY + (bboxHeight - drawHeight) / 2
-
-        ctx.drawImage(userImg, drawX, drawY, drawWidth, drawHeight)
-
-        // Restore context to remove clipping
-        ctx.restore()
-
-        // Draw frame on top
-        ctx.drawImage(frameImg, 0, 0, canvas.width, canvas.height)
-
-        // Convert to data URL
-        resolve(canvas.toDataURL('image/png', 0.92))
-      } catch (error) {
-        reject(error)
-      }
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl)
+      reject(new Error('Failed to load image element'))
     }
-
-    userImg.onload = () => {
-      userLoaded = true
-      tryComposite()
-    }
-
-    frameImg.onload = () => {
-      frameLoaded = true
-      tryComposite()
-    }
-
-    userImg.onerror = () => reject(new Error('Failed to load user image'))
-    frameImg.onerror = () => reject(new Error('Failed to load frame image'))
-
-    // Start loading
-    userImg.src = userImageUrl
-    frameImg.src = frameImageUrl
+    img.src = objectUrl
   })
+}
+
+export const compositeWithCanvasClipping = async (userImageUrl, frameImageUrl, frameData) => {
+  if (!frameData?.points || frameData.points.length !== 4) {
+    throw new Error('Frame data missing required 4 points')
+  }
+
+  const canvas = document.createElement('canvas')
+  canvas.width = frameData.imageWidth || 3000
+  canvas.height = frameData.imageHeight || 3000
+  const ctx = canvas.getContext('2d')
+
+  try {
+    const [userImg, frameImg] = await Promise.all([
+      fetchImageToElement(userImageUrl),
+      fetchImageToElement(frameImageUrl)
+    ])
+
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+    // Save context state before clipping
+    ctx.save()
+
+    // Set clipping path from the 4 points
+    ctx.beginPath()
+    ctx.moveTo(frameData.points[0].x, frameData.points[0].y)
+    ctx.lineTo(frameData.points[1].x, frameData.points[1].y)
+    ctx.lineTo(frameData.points[2].x, frameData.points[2].y)
+    ctx.lineTo(frameData.points[3].x, frameData.points[3].y)
+    ctx.closePath()
+    ctx.clip()
+
+    // Get bounding box of the 4 points
+    const xs = frameData.points.map(p => p.x)
+    const ys = frameData.points.map(p => p.y)
+    const minX = Math.min(...xs)
+    const minY = Math.min(...ys)
+    const maxX = Math.max(...xs)
+    const maxY = Math.max(...ys)
+    const bboxWidth = maxX - minX
+    const bboxHeight = maxY - minY
+
+    // Draw user image to fill bounding box (object-fit: cover)
+    const imageRatio = userImg.width / userImg.height
+    const bboxRatio = bboxWidth / bboxHeight
+    let drawWidth
+    let drawHeight
+
+    if (imageRatio > bboxRatio) {
+      drawHeight = bboxHeight
+      drawWidth = bboxHeight * imageRatio
+    } else {
+      drawWidth = bboxWidth
+      drawHeight = bboxWidth / imageRatio
+    }
+
+    const drawX = minX + (bboxWidth - drawWidth) / 2
+    const drawY = minY + (bboxHeight - drawHeight) / 2
+
+    ctx.drawImage(userImg, drawX, drawY, drawWidth, drawHeight)
+
+    // Restore context to remove clipping
+    ctx.restore()
+
+    // Draw frame on top
+    ctx.drawImage(frameImg, 0, 0, canvas.width, canvas.height)
+
+    // Convert to data URL
+    return canvas.toDataURL('image/png', 0.92)
+  } catch (error) {
+    console.error('Failed to composite with canvas clipping:', error)
+    throw error
+  }
 }
 
 /**
