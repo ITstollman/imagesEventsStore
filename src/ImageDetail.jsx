@@ -48,25 +48,7 @@ function FramePreviewCard({ preview, product, onSelect, frameColors }) {
             overflow: 'visible'
           }}
         >
-          {/* RAW user image - NO clipping, NO canvas */}
-          <img 
-            src={preview.userImage} 
-            alt={`Your photo`}
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              objectFit: 'contain',
-              zIndex: 2
-            }}
-            onLoad={() => {
-              console.log('🧪 TEST: User image loaded')
-              setUserImageLoaded(true)
-            }}
-          />
-          {/* Frame overlay */}
+          {/* Frame overlay (on top) */}
           <img 
             src={preview.frameImageUrl}
             alt={`Frame`}
@@ -77,11 +59,29 @@ function FramePreviewCard({ preview, product, onSelect, frameColors }) {
               width: '100%',
               height: '100%',
               objectFit: 'contain',
-              zIndex: 3
+              zIndex: 10
             }}
             onLoad={() => {
               console.log('🧪 TEST: Frame loaded')
               setFrameImageLoaded(true)
+            }}
+          />
+          {/* User image (behind frame) */}
+          <img 
+            src={preview.userImage} 
+            alt={`Your photo`}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              zIndex: 5
+            }}
+            onLoad={() => {
+              console.log('🧪 TEST: User image loaded')
+              setUserImageLoaded(true)
             }}
           />
         </div>
@@ -120,30 +120,6 @@ function FramePreviewCard({ preview, product, onSelect, frameColors }) {
           className="product-image frame-preview-container"
           style={{ display: bothLoaded ? 'block' : 'none' }}
         >
-          {/* Clipped user photo (behind) - NO CLASSES, use inline to avoid CSS conflicts */}
-          <img 
-            src={preview.clippedPhotoUrl} 
-            alt={`Your photo clipped`}
-            className="clipped-photo-layer"
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              objectFit: 'contain',
-              zIndex: 2,
-              display: 'block'
-            }}
-            onLoad={(e) => {
-              console.log('✅ Clipped photo loaded:', preview.size, `Natural size: ${e.target.naturalWidth}x${e.target.naturalHeight}`)
-              setClippedPhotoLoaded(true)
-            }}
-            onError={(e) => {
-              console.error('❌ Clipped photo failed:', preview.size, e)
-              setClippedPhotoLoaded(true)
-            }}
-          />
           {/* Frame overlay (on top) */}
           <img 
             src={preview.frameImageUrl}
@@ -156,7 +132,7 @@ function FramePreviewCard({ preview, product, onSelect, frameColors }) {
               width: '100%',
               height: '100%',
               objectFit: 'contain',
-              zIndex: 3,
+              zIndex: 10,
               display: 'block'
             }}
             onLoad={(e) => {
@@ -166,6 +142,30 @@ function FramePreviewCard({ preview, product, onSelect, frameColors }) {
             onError={(e) => {
               console.error('❌ Frame overlay failed:', preview.size)
               setFrameOverlayLoaded(true)
+            }}
+          />
+          {/* Clipped user photo (behind frame) */}
+          <img 
+            src={preview.clippedPhotoUrl} 
+            alt={`Your photo clipped`}
+            className="clipped-photo-layer"
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              zIndex: 5,
+              display: 'block'
+            }}
+            onLoad={(e) => {
+              console.log('✅ Clipped photo loaded:', preview.size, `Natural size: ${e.target.naturalWidth}x${e.target.naturalHeight}`)
+              setClippedPhotoLoaded(true)
+            }}
+            onError={(e) => {
+              console.error('❌ Clipped photo failed:', preview.size, e)
+              setClippedPhotoLoaded(true)
             }}
           />
           <div className="product-colors">
